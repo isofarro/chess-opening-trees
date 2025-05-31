@@ -38,3 +38,10 @@ cd ....
 uv install
 ```
 
+## Usage
+
+```
+python -m chess_opening_trees.tree_builder \
+    ~/Downloads/twic1594.pgn\
+    --db opening_tree.db
+```
