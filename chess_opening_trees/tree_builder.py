@@ -2,8 +2,16 @@ from pathlib import Path
 from .repository.database import OpeningTreeRepository
 from .service.opening_tree import OpeningTreeService
 
-def process_pgn_file(pgn_path: str, db_path: str, max_moves: int = 30, min_rating: int = 0) -> None:
+def process_pgn_file(pgn_path: str, db_path: str | None = None, max_moves: int = 30, min_rating: int = 0) -> None:
     """Process a PGN file and build/update the opening tree."""
+    # If db_path is not provided, use the PGN path with .db extension
+    if db_path is None:
+        pgn_file = Path(pgn_path)
+        if pgn_file.suffix.lower() == '.pgn':
+            db_path = str(pgn_file.with_suffix('.db'))
+        else:
+            db_path = 'opening_tree.db'
+    
     repository = OpeningTreeRepository(db_path)
     service = OpeningTreeService(repository, max_moves=max_moves, min_rating=min_rating)
     service.process_pgn_file(Path(pgn_path))
@@ -13,7 +21,7 @@ def main():
     
     parser = argparse.ArgumentParser(description="Build a chess opening tree from PGN files")
     parser.add_argument("pgn_file", help="Path to the PGN file to process")
-    parser.add_argument("--db", default="opening_tree.db", help="Path to the SQLite database file")
+    parser.add_argument("--db", default=None, help="Path to the SQLite database file (default: same as PGN file with .db extension)")
     parser.add_argument("--max-moves", type=int, default=30, 
                       help="Maximum number of moves to process per game (default: 30)")
     parser.add_argument("--min-rating", type=int, default=0,
