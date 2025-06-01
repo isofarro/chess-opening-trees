@@ -44,5 +44,6 @@ uv install
 python -m chess_opening_trees.tree_builder \
     --db opening_tree.db\
     --max-moves 20\
+    --min-rating 2000\
     ~/Downloads/twic1594.pgn
 ```

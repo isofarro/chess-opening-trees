@@ -18,16 +18,21 @@ class GameData(NamedTuple):
     date: str
 
 class OpeningTreeService:
-    def __init__(self, repository: OpeningTreeRepository, max_moves: int = 30):
+    def __init__(self, repository: OpeningTreeRepository, max_moves: int = 30, min_rating: int = 0):
         self.repository = repository
         self.parser = PGNParser()
         self.max_moves = max_moves
+        self.min_rating = min_rating
     
     def process_pgn_file(self, pgn_path: Path) -> None:
         """Process a PGN file and add its games to the opening tree."""
         for game in self.parser.parse_file(pgn_path):
             try:
                 game_data = self._process_game(game)
+                # Skip games where either player is below the minimum rating
+                if (game_data.white_elo < self.min_rating or 
+                    game_data.black_elo < self.min_rating):
+                    continue
                 self.repository.add_game_to_opening_tree(game_data)
             except Exception as e:
                 print(f"Error processing game: {e}")
