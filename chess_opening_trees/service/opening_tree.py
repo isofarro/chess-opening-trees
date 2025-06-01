@@ -1,9 +1,21 @@
 from pathlib import Path
-from typing import Dict, Any
+from typing import List, NamedTuple
 import chess
 
 from ..repository.database import OpeningTreeRepository
 from ..parser.pgn_parser import PGNParser
+
+class GameMove(NamedTuple):
+    from_position: str  # FEN
+    to_position: str    # FEN
+    move_san: str
+
+class GameData(NamedTuple):
+    moves: List[GameMove]
+    result: str
+    white_elo: int
+    black_elo: int
+    date: str
 
 class OpeningTreeService:
     def __init__(self, repository: OpeningTreeRepository, max_moves: int = 30):
@@ -14,78 +26,42 @@ class OpeningTreeService:
     def process_pgn_file(self, pgn_path: Path) -> None:
         """Process a PGN file and add its games to the opening tree."""
         for game in self.parser.parse_file(pgn_path):
-            self.repository.start_game_transaction()
             try:
-                self._process_game(game)
-                self.repository.commit_game_transaction()
+                game_data = self._process_game(game)
+                self.repository.add_game_to_opening_tree(game_data)
             except Exception as e:
                 print(f"Error processing game: {e}")
-                self.repository.commit_game_transaction()  # or could add a rollback method
 
-    def _process_game(self, game: chess.pgn.Game) -> None:
-        """Process a single game and update the opening tree."""
-        game_data = {
-            'result': game.headers.get('Result', '*'),
-            'white_elo': int(game.headers.get('WhiteElo', '0')),
-            'black_elo': int(game.headers.get('BlackElo', '0')),
-            'date': game.headers.get('Date', '????-??-??')
-        }
-        
-        last_position_id = None
+    def _process_game(self, game: chess.pgn.Game) -> GameData:
+        """Process a single game and return structured game data."""
+        moves = []
         move_count = 0
+        
         for position_fen, move_san in self.parser.extract_moves(game):
             if move_count >= self.max_moves:
                 break
                 
             # Normalize FEN by keeping only the first 4 segments
-            position_fen = self.normalise_fen(position_fen)
-            
-            # Add positions and moves to the database
-            from_pos_id = self.repository.add_position(position_fen)
+            from_position = self.normalise_fen(position_fen)
             
             # Create the next position to get its FEN
             board = chess.Board(position_fen)
             move = board.parse_san(move_san)
             board.push(move)
-            to_pos_fen = self.normalise_fen(board.fen())
+            to_position = self.normalise_fen(board.fen())
             
-            to_pos_id = self.repository.add_position(to_pos_fen)
-            self.repository.add_move(from_pos_id, to_pos_id, move_san)
-            
-            # Update statistics for the starting position
-            self._update_position_stats(from_pos_id, game_data)
-            last_position_id = to_pos_id
+            moves.append(GameMove(from_position, to_position, move_san))
             move_count += 1
         
-        # Update statistics for the final position
-        if last_position_id is not None:
-            self._update_position_stats(last_position_id, game_data)
+        return GameData(
+            moves=moves,
+            result=game.headers.get('Result', '*'),
+            white_elo=int(game.headers.get('WhiteElo', '0')),
+            black_elo=int(game.headers.get('BlackElo', '0')),
+            date=game.headers.get('Date', '????-??-??')
+        )
     
     @staticmethod
     def normalise_fen(fen: str) -> str:
-        """Normalize a FEN string by keeping only the first 4 segments.
-        
-        The segments are:
-        1. Piece placement
-        2. Active color
-        3. Castling availability
-        4. En passant target square
-        
-        The half-move clock and full move number are discarded.
-        """
+        """Normalize a FEN string by keeping only the first 4 segments."""
         return ' '.join(fen.split()[:4])
-
-    def _update_position_stats(self, position_id: int, game_data: Dict[str, Any]) -> None:
-        """Update statistics for a position based on game data."""
-        # Initialize stats with default values if needed
-        stats = {
-            'total_games': 1,
-            'white_wins': 1 if game_data['result'] == '1-0' else 0,
-            'black_wins': 1 if game_data['result'] == '0-1' else 0,
-            'draws': 1 if game_data['result'] == '1/2-1/2' else 0,
-            'total_white_elo': game_data['white_elo'],
-            'total_black_elo': game_data['black_elo'],
-            'last_played_date': game_data['date']
-        }
-        
-        self.repository.update_statistics(position_id, stats)

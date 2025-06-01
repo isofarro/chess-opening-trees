@@ -1,6 +1,5 @@
 from typing import Dict, Any
 import sqlite3
-from datetime import datetime
 
 class OpeningTreeRepository:
     def __init__(self, db_path: str):
@@ -99,3 +98,41 @@ class OpeningTreeRepository:
             new_stats['total_black_elo'],
             new_stats['last_played_date']
         ))
+    
+    def add_game_to_opening_tree(self, game_data: 'GameData') -> None:
+        """Add a complete game to the opening tree within a single transaction."""
+        self.start_game_transaction()
+        try:
+            # Process each move
+            for move in game_data.moves:
+                # Add positions
+                from_pos_id = self.add_position(move.from_position)
+                to_pos_id = self.add_position(move.to_position)
+                
+                # Add move
+                self.add_move(from_pos_id, to_pos_id, move.move_san)
+                
+                # Update statistics for the starting position
+                self._update_position_stats(from_pos_id, game_data)
+            
+            # Update statistics for the final position if there were any moves
+            if game_data.moves:
+                self._update_position_stats(to_pos_id, game_data)
+                
+            self.commit_game_transaction()
+        except Exception as e:
+            self.commit_game_transaction()  # or could add a rollback method
+            raise e
+    
+    def _update_position_stats(self, position_id: int, game_data: 'GameData') -> None:
+        """Update statistics for a position based on game data."""
+        stats = {
+            'total_games': 1,
+            'white_wins': 1 if game_data.result == '1-0' else 0,
+            'black_wins': 1 if game_data.result == '0-1' else 0,
+            'draws': 1 if game_data.result == '1/2-1/2' else 0,
+            'total_white_elo': game_data.white_elo,
+            'total_black_elo': game_data.black_elo,
+            'last_played_date': game_data.date
+        }
+        self.update_statistics(position_id, stats)
