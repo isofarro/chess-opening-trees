@@ -24,7 +24,8 @@ class OpeningTreeRepository:
                     to_position_id INTEGER NOT NULL,
                     move TEXT NOT NULL,
                     FOREIGN KEY (from_position_id) REFERENCES positions (id),
-                    FOREIGN KEY (to_position_id) REFERENCES positions (id)
+                    FOREIGN KEY (to_position_id) REFERENCES positions (id),
+                    UNIQUE(from_position_id, to_position_id, move)
                 );
                 
                 CREATE TABLE IF NOT EXISTS position_statistics (
@@ -64,7 +65,7 @@ class OpeningTreeRepository:
     def add_move(self, from_pos_id: int, to_pos_id: int, move: str) -> None:
         """Add a move between two positions."""
         self.conn.execute(
-            "INSERT INTO moves (from_position_id, to_position_id, move) VALUES (?, ?, ?)",
+            "INSERT OR IGNORE INTO moves (from_position_id, to_position_id, move) VALUES (?, ?, ?)",
             (from_pos_id, to_pos_id, move)
         )
     
