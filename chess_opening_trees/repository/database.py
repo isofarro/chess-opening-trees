@@ -1,6 +1,5 @@
 from typing import Dict, Any
 import sqlite3
-import json
 from datetime import datetime
 
 class OpeningTreeRepository:
@@ -30,7 +29,13 @@ class OpeningTreeRepository:
                 
                 CREATE TABLE IF NOT EXISTS position_statistics (
                     position_id INTEGER PRIMARY KEY,
-                    statistics TEXT NOT NULL,  -- JSON object
+                    total_games INTEGER NOT NULL DEFAULT 0,
+                    white_wins INTEGER NOT NULL DEFAULT 0,
+                    black_wins INTEGER NOT NULL DEFAULT 0,
+                    draws INTEGER NOT NULL DEFAULT 0,
+                    total_white_elo INTEGER NOT NULL DEFAULT 0,
+                    total_black_elo INTEGER NOT NULL DEFAULT 0,
+                    last_played_date TEXT NOT NULL DEFAULT '',
                     FOREIGN KEY (position_id) REFERENCES positions (id)
                 );
             """)
@@ -71,29 +76,26 @@ class OpeningTreeRepository:
     
     def update_statistics(self, position_id: int, new_stats: Dict[str, Any]) -> None:
         """Update statistics for a position, merging with existing stats if present."""
-        cursor = self.conn.execute(
-            "SELECT statistics FROM position_statistics WHERE position_id = ?",
-            (position_id,)
-        )
-        row = cursor.fetchone()
-        
-        if row:
-            # Merge with existing statistics
-            current_stats = json.loads(row[0])
-            merged_stats = {
-                'total_games': current_stats.get('total_games', 0) + new_stats['total_games'],
-                'white_wins': current_stats.get('white_wins', 0) + new_stats['white_wins'],
-                'black_wins': current_stats.get('black_wins', 0) + new_stats['black_wins'],
-                'draws': current_stats.get('draws', 0) + new_stats['draws'],
-                'total_white_elo': current_stats.get('total_white_elo', 0) + new_stats['total_white_elo'],
-                'total_black_elo': current_stats.get('total_black_elo', 0) + new_stats['total_black_elo'],
-                'last_played_date': max(current_stats.get('last_played_date', ''), new_stats['last_played_date'])
-            }
-        else:
-            # Use new statistics as is
-            merged_stats = new_stats
-        
-        self.conn.execute(
-            "INSERT OR REPLACE INTO position_statistics (position_id, statistics) VALUES (?, ?)",
-            (position_id, json.dumps(merged_stats))
-        )
+        self.conn.execute("""
+            INSERT INTO position_statistics (
+                position_id, total_games, white_wins, black_wins, draws,
+                total_white_elo, total_black_elo, last_played_date
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(position_id) DO UPDATE SET
+                total_games = total_games + excluded.total_games,
+                white_wins = white_wins + excluded.white_wins,
+                black_wins = black_wins + excluded.black_wins,
+                draws = draws + excluded.draws,
+                total_white_elo = total_white_elo + excluded.total_white_elo,
+                total_black_elo = total_black_elo + excluded.total_black_elo,
+                last_played_date = MAX(last_played_date, excluded.last_played_date)
+        """, (
+            position_id,
+            new_stats['total_games'],
+            new_stats['white_wins'],
+            new_stats['black_wins'],
+            new_stats['draws'],
+            new_stats['total_white_elo'],
+            new_stats['total_black_elo'],
+            new_stats['last_played_date']
+        ))
