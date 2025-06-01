@@ -23,7 +23,12 @@ class OpeningTreeService:
     
     def _process_game(self, game: chess.pgn.Game) -> None:
         """Process a single game and update the opening tree."""
-        result = self._get_game_result(game)
+        game_data = {
+            'result': game.headers.get('Result', '*'),
+            'white_elo': int(game.headers.get('WhiteElo', '0')),
+            'black_elo': int(game.headers.get('BlackElo', '0')),
+            'date': game.headers.get('Date', '????-??-??')
+        }
         
         for position_fen, move_san in self.parser.extract_moves(game):
             # Add positions and moves to the database
@@ -39,20 +44,19 @@ class OpeningTreeService:
             self.repository.add_move(from_pos_id, to_pos_id, move_san)
             
             # Update statistics
-            self._update_position_stats(from_pos_id, result)
+            self._update_position_stats(from_pos_id, game_data)
     
-    def _get_game_result(self, game: chess.pgn.Game) -> str:
-        """Extract the game result: '1-0', '0-1', or '1/2-1/2'."""
-        return game.headers.get("Result", "*")
-    
-    def _update_position_stats(self, position_id: int, result: str) -> None:
-        """Update statistics for a position based on game result."""
+    def _update_position_stats(self, position_id: int, game_data: Dict[str, Any]) -> None:
+        """Update statistics for a position based on game data."""
         # Initialize stats with default values if needed
-        stats: Dict[str, Any] = {
-            "total_games": 1,
-            "white_wins": 1 if result == "1-0" else 0,
-            "black_wins": 1 if result == "0-1" else 0,
-            "draws": 1 if result == "1/2-1/2" else 0
+        stats = {
+            'total_games': 1,
+            'white_wins': 1 if game_data['result'] == '1-0' else 0,
+            'black_wins': 1 if game_data['result'] == '0-1' else 0,
+            'draws': 1 if game_data['result'] == '1/2-1/2' else 0,
+            'total_white_elo': game_data['white_elo'],
+            'total_black_elo': game_data['black_elo'],
+            'last_played_date': game_data['date']
         }
         
         self.repository.update_statistics(position_id, stats)
