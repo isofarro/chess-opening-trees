@@ -18,7 +18,7 @@ class GameData(NamedTuple):
     date: str
 
 class OpeningTreeService:
-    def __init__(self, repository: OpeningTreeRepository, max_moves: int = 30, min_rating: int = 0):
+    def __init__(self, repository: OpeningTreeRepository, max_moves: int = 40, min_rating: int = 0):
         self.repository = repository
         self.parser = PGNParser()
         self.max_moves = max_moves
