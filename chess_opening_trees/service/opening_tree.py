@@ -6,9 +6,10 @@ from ..repository.database import OpeningTreeRepository
 from ..parser.pgn_parser import PGNParser
 
 class OpeningTreeService:
-    def __init__(self, repository: OpeningTreeRepository):
+    def __init__(self, repository: OpeningTreeRepository, max_moves: int = 30):
         self.repository = repository
         self.parser = PGNParser()
+        self.max_moves = max_moves
     
     def process_pgn_file(self, pgn_path: Path) -> None:
         """Process a PGN file and add its games to the opening tree."""
@@ -20,20 +21,6 @@ class OpeningTreeService:
             except Exception as e:
                 print(f"Error processing game: {e}")
                 self.repository.commit_game_transaction()  # or could add a rollback method
-    
-    @staticmethod
-    def normalise_fen(fen: str) -> str:
-        """Normalize a FEN string by keeping only the first 4 segments.
-        
-        The segments are:
-        1. Piece placement
-        2. Active color
-        3. Castling availability
-        4. En passant target square
-        
-        The half-move clock and full move number are discarded.
-        """
-        return ' '.join(fen.split()[:4])
 
     def _process_game(self, game: chess.pgn.Game) -> None:
         """Process a single game and update the opening tree."""
@@ -45,7 +32,11 @@ class OpeningTreeService:
         }
         
         last_position_id = None
+        move_count = 0
         for position_fen, move_san in self.parser.extract_moves(game):
+            if move_count >= self.max_moves:
+                break
+                
             # Normalize FEN by keeping only the first 4 segments
             position_fen = self.normalise_fen(position_fen)
             
@@ -64,11 +55,26 @@ class OpeningTreeService:
             # Update statistics for the starting position
             self._update_position_stats(from_pos_id, game_data)
             last_position_id = to_pos_id
+            move_count += 1
         
         # Update statistics for the final position
         if last_position_id is not None:
             self._update_position_stats(last_position_id, game_data)
     
+    @staticmethod
+    def normalise_fen(fen: str) -> str:
+        """Normalize a FEN string by keeping only the first 4 segments.
+        
+        The segments are:
+        1. Piece placement
+        2. Active color
+        3. Castling availability
+        4. En passant target square
+        
+        The half-move clock and full move number are discarded.
+        """
+        return ' '.join(fen.split()[:4])
+
     def _update_position_stats(self, position_id: int, game_data: Dict[str, Any]) -> None:
         """Update statistics for a position based on game data."""
         # Initialize stats with default values if needed
