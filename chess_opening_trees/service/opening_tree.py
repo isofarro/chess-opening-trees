@@ -21,6 +21,20 @@ class OpeningTreeService:
                 print(f"Error processing game: {e}")
                 self.repository.commit_game_transaction()  # or could add a rollback method
     
+    @staticmethod
+    def normalise_fen(fen: str) -> str:
+        """Normalize a FEN string by keeping only the first 4 segments.
+        
+        The segments are:
+        1. Piece placement
+        2. Active color
+        3. Castling availability
+        4. En passant target square
+        
+        The half-move clock and full move number are discarded.
+        """
+        return ' '.join(fen.split()[:4])
+
     def _process_game(self, game: chess.pgn.Game) -> None:
         """Process a single game and update the opening tree."""
         game_data = {
@@ -30,7 +44,11 @@ class OpeningTreeService:
             'date': game.headers.get('Date', '????-??-??')
         }
         
+        last_position_id = None
         for position_fen, move_san in self.parser.extract_moves(game):
+            # Normalize FEN by keeping only the first 4 segments
+            position_fen = self.normalise_fen(position_fen)
+            
             # Add positions and moves to the database
             from_pos_id = self.repository.add_position(position_fen)
             
@@ -38,13 +56,18 @@ class OpeningTreeService:
             board = chess.Board(position_fen)
             move = board.parse_san(move_san)
             board.push(move)
-            to_pos_fen = board.fen()
+            to_pos_fen = self.normalise_fen(board.fen())
             
             to_pos_id = self.repository.add_position(to_pos_fen)
             self.repository.add_move(from_pos_id, to_pos_id, move_san)
             
-            # Update statistics
+            # Update statistics for the starting position
             self._update_position_stats(from_pos_id, game_data)
+            last_position_id = to_pos_id
+        
+        # Update statistics for the final position
+        if last_position_id is not None:
+            self._update_position_stats(last_position_id, game_data)
     
     def _update_position_stats(self, position_id: int, game_data: Dict[str, Any]) -> None:
         """Update statistics for a position based on game data."""
