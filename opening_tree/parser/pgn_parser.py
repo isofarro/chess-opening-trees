@@ -11,7 +11,7 @@ class PGNParser:
         Only standard chess games are processed.
         """
         game_count = 0
-        with open(pgn_path) as pgn_file:
+        with open(pgn_path, encoding='iso-8859-1') as pgn_file:
             while True:
                 game = chess.pgn.read_game(pgn_file)
                 if game is None:
