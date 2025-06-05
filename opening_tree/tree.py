@@ -23,10 +23,10 @@ def main():
         help="Path to the SQLite database file (default: same as PGN file with .db extension)"
     )
     build_parser.add_argument(
-        "--max-moves",
+        "--max-ply",
         type=int,
         default=30,
-        help="Maximum number of moves to process per game (default: 30)"
+        help="Maximum number of half-moves (ply) to process per game (default: 30)"
     )
     build_parser.add_argument(
         "--min-rating",
