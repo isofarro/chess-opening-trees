@@ -45,5 +45,5 @@ uv install
     --db my_tree.db \
     --max-ply 60 \
     --min-rating 2000 \
-    ~/Downloads/twic1594.pgn 
+    pgn/
 ```

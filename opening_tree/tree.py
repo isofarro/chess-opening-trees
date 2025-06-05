@@ -14,8 +14,9 @@ def main():
         help="Build a new opening tree from PGN files"
     )
     build_parser.add_argument(
-        "pgn_file",
-        help="Path to the PGN file to process"
+        "pgn_files",
+        nargs="+",
+        help="One or more PGN files to process (glob patterns are supported, e.g., *.pgn)"
     )
     build_parser.add_argument(
         "--db",
