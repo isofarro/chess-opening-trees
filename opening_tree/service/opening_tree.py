@@ -18,10 +18,10 @@ class GameData(NamedTuple):
     date: str
 
 class OpeningTreeService:
-    def __init__(self, repository: OpeningTreeRepository, max_moves: int = 40, min_rating: int = 0):
+    def __init__(self, repository: OpeningTreeRepository, max_ply: int = 40, min_rating: int = 0):
         self.repository = repository
         self.parser = PGNParser()
-        self.max_moves = max_moves
+        self.max_ply = max_ply
         self.min_rating = min_rating
     
     def process_pgn_file(self, pgn_path: Path) -> None:
@@ -40,10 +40,10 @@ class OpeningTreeService:
     def _process_game(self, game: chess.pgn.Game) -> GameData:
         """Process a single game and return structured game data."""
         moves = []
-        move_count = 0
+        ply_count = 0
         
         for position_fen, move_san in self.parser.extract_moves(game):
-            if move_count >= self.max_moves:
+            if ply_count >= self.max_ply:
                 break
                 
             # Normalize FEN by keeping only the first 4 segments
@@ -56,7 +56,7 @@ class OpeningTreeService:
             to_position = self.normalise_fen(board.fen())
             
             moves.append(GameMove(from_position, to_position, move_san))
-            move_count += 1
+            ply_count += 1
         
         return GameData(
             moves=moves,

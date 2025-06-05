@@ -43,7 +43,7 @@ uv install
 ```
 python -m opening_tree.tree build \
     --db opening_tree.db \
-    --max-moves 40 \
+    --max-ply 40 \
     --min-rating 2000 \
     ~/Downloads/twic1594.pgn 
 ```
