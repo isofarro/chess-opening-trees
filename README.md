@@ -33,17 +33,17 @@ pip install uv
 ## Installation
 
 ```
-git clone ...
-cd ....
+git clone https://github.com/isofarro/chess-opening-trees.git
+cd chess-opening-trees
 uv install
 ```
 
 ## Usage
 
 ```
-python -m chess_opening_trees.tree_builder \
-    --db opening_tree.db\
-    --max-moves 20\
-    --min-rating 2000\
-    ~/Downloads/twic1594.pgn
+python -m opening_tree.tree build \
+    --db opening_tree.db \
+    --max-moves 40 \
+    --min-rating 2000 \
+    ~/Downloads/twic1594.pgn 
 ```
