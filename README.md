@@ -41,7 +41,7 @@ uv install
 ## Usage
 
 ```
-python -m opening_tree.tree build \
+./tree.py build \
     --db my_tree.db \
     --max-ply 60 \
     --min-rating 2000 \
