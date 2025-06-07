@@ -18,6 +18,8 @@ class GameData(NamedTuple):
     white_elo: int
     black_elo: int
     date: str
+    white_performance: int
+    black_performance: int
 
 class PGNFileMetadata(NamedTuple):
     filename: str
@@ -111,12 +113,29 @@ class OpeningTreeService:
             moves.append(GameMove(from_position, to_position, move_san))
             ply_count += 1
 
+        white_elo = int(game.headers.get('WhiteElo', '0'))
+        black_elo = int(game.headers.get('BlackElo', '0'))
+        result = game.headers.get('Result', '*')
+
+        # Calculate performance ratings
+        if result == '1-0':  # White win
+            white_performance = max(white_elo, black_elo + 400)
+            black_performance = min(black_elo, white_elo - 400)
+        elif result == '0-1':  # Black win
+            white_performance = min(white_elo, black_elo - 400)
+            black_performance = max(black_elo, white_elo + 400)
+        else:  # Draw or unknown result
+            white_performance = black_elo
+            black_performance = white_elo
+
         return GameData(
             moves=moves,
-            result=game.headers.get('Result', '*'),
-            white_elo=int(game.headers.get('WhiteElo', '0')),
-            black_elo=int(game.headers.get('BlackElo', '0')),
-            date=game.headers.get('Date', '????-??-??')
+            result=result,
+            white_elo=white_elo,
+            black_elo=black_elo,
+            date=game.headers.get('Date', '????-??-??'),
+            white_performance=white_performance,
+            black_performance=black_performance
         )
 
     @staticmethod

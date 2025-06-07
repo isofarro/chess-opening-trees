@@ -31,8 +31,8 @@ class OpeningTreeRepository:
                 white_wins INTEGER NOT NULL DEFAULT 0,
                 black_wins INTEGER NOT NULL DEFAULT 0,
                 draws INTEGER NOT NULL DEFAULT 0,
-                total_white_elo INTEGER NOT NULL DEFAULT 0,
-                total_black_elo INTEGER NOT NULL DEFAULT 0,
+                total_player_elo INTEGER NOT NULL DEFAULT 0,
+                total_player_performance INTEGER NOT NULL DEFAULT 0,
                 last_played_date TEXT NOT NULL DEFAULT '',
                 FOREIGN KEY (position_id) REFERENCES positions (id)
             );
@@ -73,15 +73,15 @@ class OpeningTreeRepository:
         self.conn.execute("""
             INSERT INTO position_statistics (
                 position_id, total_games, white_wins, black_wins, draws,
-                total_white_elo, total_black_elo, last_played_date
+                total_player_elo, total_player_performance, last_played_date
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(position_id) DO UPDATE SET
                 total_games = total_games + excluded.total_games,
                 white_wins = white_wins + excluded.white_wins,
                 black_wins = black_wins + excluded.black_wins,
                 draws = draws + excluded.draws,
-                total_white_elo = total_white_elo + excluded.total_white_elo,
-                total_black_elo = total_black_elo + excluded.total_black_elo,
+                total_player_elo = total_player_elo + excluded.total_player_elo,
+                total_player_performance = total_player_performance + excluded.total_player_performance,
                 last_played_date = MAX(last_played_date, excluded.last_played_date)
         """, (
             position_id,
@@ -89,10 +89,34 @@ class OpeningTreeRepository:
             new_stats['white_wins'],
             new_stats['black_wins'],
             new_stats['draws'],
-            new_stats['total_white_elo'],
-            new_stats['total_black_elo'],
+            new_stats['total_player_elo'],
+            new_stats['total_player_performance'],
             new_stats['last_played_date']
         ))
+
+    def _update_position_stats(self, position_id: int, game_data: 'GameData', is_white_to_move: bool) -> None:
+        """Update statistics for a position based on game data."""
+        # If white is to move, black just moved, and vice versa
+        just_moved_is_white = not is_white_to_move
+
+        # Get the appropriate ratings based on who just moved
+        if just_moved_is_white:
+            player_elo = game_data.white_elo
+            player_performance = game_data.white_performance
+        else:
+            player_elo = game_data.black_elo
+            player_performance = game_data.black_performance
+
+        stats = {
+            'total_games': 1,
+            'white_wins': 1 if game_data.result == '1-0' else 0,
+            'black_wins': 1 if game_data.result == '0-1' else 0,
+            'draws': 1 if game_data.result == '1/2-1/2' else 0,
+            'total_player_elo': player_elo,
+            'total_player_performance': player_performance,
+            'last_played_date': game_data.date
+        }
+        self.update_statistics(position_id, stats)
 
     def add_game_to_opening_tree(self, game_data: 'GameData') -> None:
         """Add a complete game to the opening tree within a single transaction."""
@@ -107,30 +131,21 @@ class OpeningTreeRepository:
                 # Add move
                 self.add_move(from_pos_id, to_pos_id, move.move_san)
 
+                # Get who is to move from the FEN (2nd segment)
+                is_white_to_move = move.from_position.split()[1] == 'w'
+
                 # Update statistics for the starting position
-                self._update_position_stats(from_pos_id, game_data)
+                self._update_position_stats(from_pos_id, game_data, is_white_to_move)
 
             # Update statistics for the final position if there were any moves
             if game_data.moves:
-                self._update_position_stats(to_pos_id, game_data)
+                is_white_to_move = move.to_position.split()[1] == 'w'
+                self._update_position_stats(to_pos_id, game_data, is_white_to_move)
 
             self.conn.commit()
         except Exception as e:
             self.conn.rollback()
             raise e
-
-    def _update_position_stats(self, position_id: int, game_data: 'GameData') -> None:
-        """Update statistics for a position based on game data."""
-        stats = {
-            'total_games': 1,
-            'white_wins': 1 if game_data.result == '1-0' else 0,
-            'black_wins': 1 if game_data.result == '0-1' else 0,
-            'draws': 1 if game_data.result == '1/2-1/2' else 0,
-            'total_white_elo': game_data.white_elo,
-            'total_black_elo': game_data.black_elo,
-            'last_played_date': game_data.date
-        }
-        self.update_statistics(position_id, stats)
 
     def add_imported_pgn_file(self, filename: str, last_modified: str, file_size: int, file_hash: str) -> None:
         """Record a successfully imported PGN file."""
