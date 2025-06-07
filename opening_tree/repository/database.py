@@ -104,7 +104,7 @@ class OpeningTreeRepository:
 
     def add_game_to_opening_tree(self, game_data: 'GameData') -> None:
         """Add a complete game to the opening tree within a single transaction."""
-        self.start_game_transaction()
+        self.conn.execute("BEGIN TRANSACTION")
         try:
             # Process each move
             for move in game_data.moves:
@@ -122,9 +122,9 @@ class OpeningTreeRepository:
             if game_data.moves:
                 self._update_position_stats(to_pos_id, game_data)
 
-            self.commit_game_transaction()
+            self.conn.commit()
         except Exception as e:
-            self.commit_game_transaction()  # or could add a rollback method
+            self.conn.rollback()
             raise e
 
     def _update_position_stats(self, position_id: int, game_data: 'GameData') -> None:
