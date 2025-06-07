@@ -48,14 +48,6 @@ class OpeningTreeRepository:
             );
         """)
 
-    def start_game_transaction(self):
-        """Start a new transaction for processing a game."""
-        self.conn.execute("BEGIN TRANSACTION")
-
-    def commit_game_transaction(self):
-        """Commit the current game transaction."""
-        self.conn.commit()
-
     def add_position(self, fen: str) -> int:
         """Add a position to the database and return its ID."""
         cursor = self.conn.execute(
