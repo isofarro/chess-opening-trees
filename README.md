@@ -40,6 +40,9 @@ uv install
 
 ## Usage
 
+
+### Building a tree from PGN files
+
 ```
 ./tree.py build \
     --db my_tree.db \
@@ -47,3 +50,13 @@ uv install
     --min-rating 2000 \
     pgn/
 ```
+
+### Pruning the tree of one game positions to a specific depth
+
+```
+./tree.py prune \
+    my_tree.db \
+    --max-closeness 5
+    --batch-size 2000
+```
+
