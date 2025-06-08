@@ -1,6 +1,7 @@
 from pathlib import Path
 import argparse
 from .commands.build import build_tree
+from .commands.prune import prune_tree
 
 def main():
     parser = argparse.ArgumentParser(
@@ -36,10 +37,34 @@ def main():
         help="Minimum rating required for both players (default: 0)"
     )
 
+    # Prune command
+    prune_parser = subparsers.add_parser(
+        "prune",
+        help="Prune single-game positions from the opening tree"
+    )
+    prune_parser.add_argument(
+        "db",
+        help="Path to the SQLite database file to prune"
+    )
+    prune_parser.add_argument(
+        "--max-closeness",
+        type=int,
+        default=5,
+        help="Maximum closeness score for keeping single-game positions (default: 5)"
+    )
+    prune_parser.add_argument(
+        "--batch-size",
+        type=int,
+        default=1000,
+        help="Number of positions to process in each batch (default: 1000)"
+    )
+
     args = parser.parse_args()
     
     if args.command == "build":
         build_tree(args)
+    elif args.command == "prune":
+        prune_tree(args)
     elif not args.command:
         parser.print_help()
 
