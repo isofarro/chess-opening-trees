@@ -128,12 +128,16 @@ class OpeningTreeService:
             white_performance = black_elo
             black_performance = white_elo
 
+        game_date = game.headers.get('Date', '')
+        if game_date == '????.??.??':
+            game_date = ''
+
         return GameData(
             moves=moves,
             result=result,
             white_elo=white_elo,
             black_elo=black_elo,
-            date=game.headers.get('Date', '????-??-??'),
+            date=game_date,
             white_performance=white_performance,
             black_performance=black_performance
         )
