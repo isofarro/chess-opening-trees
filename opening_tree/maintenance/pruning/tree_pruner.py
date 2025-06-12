@@ -1,7 +1,7 @@
 from typing import Optional, Callable
-from .workspace import PruningWorkspace
-from .graph_analyser import GraphAnalyser
-from .repository import PruningRepository
+from opening_tree.maintenance.pruning.workspace import PruningWorkspace
+from opening_tree.maintenance.pruning.graph_analyser import GraphAnalyser
+from opening_tree.maintenance.pruning.repository import PruningRepository
 import sqlite3
 
 class TreePruner:

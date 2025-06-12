@@ -1,5 +1,5 @@
 from typing import Optional
-from .repository import PruningRepository
+from opening_tree.maintenance.pruning.repository import PruningRepository
 
 class GraphAnalyser:
     def __init__(self, repository):
