@@ -1,7 +1,7 @@
 import argparse
-from .commands.build import build_tree
-from .commands.prune import prune_tree
-from .commands.query import query_tree
+from opening_tree.commands.build import build_tree
+from opening_tree.commands.prune import prune_tree
+from opening_tree.commands.query import query_tree
 
 def main():
     parser = argparse.ArgumentParser(

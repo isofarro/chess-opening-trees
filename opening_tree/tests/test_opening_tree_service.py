@@ -22,14 +22,14 @@ class TestOpeningTreeService(unittest.TestCase):
             # Full dates
             ('2024.03.15', '2024-03-15'),
             ('2023.12.31', '2023-12-31'),
-            
+
             # Partial dates
             ('2024.03.??', '2024-03'),
             ('2024.??.??', '2024'),
-            
+
             # Unknown dates
             ('????.??.??', ''),
-            
+
             # Invalid formats
             ('', ''),
             ('2024', ''),

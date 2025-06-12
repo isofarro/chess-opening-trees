@@ -1,4 +1,4 @@
-from ..maintenance.pruning.tree_pruner import TreePruner
+from opening_tree.maintenance.pruning.tree_pruner import TreePruner
 
 def prune_tree(args):
     """Prune single-game positions from the opening tree."""

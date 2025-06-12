@@ -1,24 +1,24 @@
 from pathlib import Path
 from itertools import chain
-from ..repository.database import OpeningTreeRepository
-from ..service.opening_tree import OpeningTreeService
+from opening_tree.repository.database import OpeningTreeRepository
+from opening_tree.service.opening_tree import OpeningTreeService
 
 def find_pgn_files(path: Path) -> list[Path]:
     """Find all PGN files in a path, handling files, directories, and glob patterns."""
     if '*' in str(path) or '?' in str(path):
         return list(Path().glob(str(path)))
-    
+
     path = Path(path)
     if not path.exists():
         print(f"Warning: {path} does not exist, skipping")
         return []
-    
+
     if path.is_file():
         return [path] if path.suffix.lower() == '.pgn' else []
-    
+
     if path.is_dir():
         return list(path.glob('**/*.pgn'))
-    
+
     return []
 
 def build_tree(args) -> None:
@@ -48,7 +48,7 @@ def build_tree(args) -> None:
 
     repository = OpeningTreeRepository(db_path)
     service = OpeningTreeService(repository, max_ply=args.max_ply, min_rating=args.min_rating)
-    
+
     # Process each PGN file
     total_files = len(pgn_paths)
     for idx, pgn_path in enumerate(pgn_paths, 1):

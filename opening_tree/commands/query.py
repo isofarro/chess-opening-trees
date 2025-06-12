@@ -1,5 +1,5 @@
-from ..repository.database import OpeningTreeRepository
-from ..service.opening_tree import OpeningTreeService
+from opening_tree.repository.database import OpeningTreeRepository
+from opening_tree.service.opening_tree import OpeningTreeService
 import json
 
 def query_tree(args) -> None:

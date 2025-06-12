@@ -176,7 +176,7 @@ class OpeningTreeService:
     @staticmethod
     def _format_pgn_date(pgn_date: str) -> str:
         """Convert PGN date format to ISO-8601.
-        
+
         Handles formats:
         - YYYY.MM.DD -> YYYY-MM-DD
         - YYYY.MM.?? -> YYYY-MM
@@ -185,16 +185,16 @@ class OpeningTreeService:
         """
         if not pgn_date or '????' in pgn_date:
             return ''
-            
+
         parts = pgn_date.split('.')
         if len(parts) != 3:
             return ''
-            
+
         # Convert valid parts to ISO format, stopping at first '??' encountered
         valid_parts = [p for p in parts if p != '??']
         if not valid_parts:
             return ''
-            
+
         return '-'.join(valid_parts)
 
     @staticmethod
