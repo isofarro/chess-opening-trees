@@ -4,8 +4,8 @@ import chess
 import hashlib
 from datetime import datetime
 
-from ..repository.database import OpeningTreeRepository
-from ..parser.pgn_parser import PGNParser
+from opening_tree.repository.database import OpeningTreeRepository
+from opening_tree.parser.pgn_parser import PGNParser
 
 class GameMove(NamedTuple):
     from_position: str  # FEN
@@ -161,9 +161,7 @@ class OpeningTreeService:
             ply_count += 1
 
         result = game.headers.get('Result', '*')
-        game_date = game.headers.get('Date', '')
-        if game_date == '????.??.??':
-            game_date = ''
+        game_date = self._format_pgn_date(game.headers.get('Date', ''))
 
         return GameData(
             moves=moves,
@@ -174,6 +172,30 @@ class OpeningTreeService:
             white_performance=white_performance,
             black_performance=black_performance
         )
+
+    @staticmethod
+    def _format_pgn_date(pgn_date: str) -> str:
+        """Convert PGN date format to ISO-8601.
+        
+        Handles formats:
+        - YYYY.MM.DD -> YYYY-MM-DD
+        - YYYY.MM.?? -> YYYY-MM
+        - YYYY.??.?? -> YYYY
+        - ????.??.?? -> ''
+        """
+        if not pgn_date or '????' in pgn_date:
+            return ''
+            
+        parts = pgn_date.split('.')
+        if len(parts) != 3:
+            return ''
+            
+        # Convert valid parts to ISO format, stopping at first '??' encountered
+        valid_parts = [p for p in parts if p != '??']
+        if not valid_parts:
+            return ''
+            
+        return '-'.join(valid_parts)
 
     @staticmethod
     def normalise_fen(fen: str) -> str:
