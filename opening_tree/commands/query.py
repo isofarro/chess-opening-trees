@@ -1,4 +1,3 @@
-from typing import Dict, Any
 from ..repository.database import OpeningTreeRepository
 from ..service.opening_tree import OpeningTreeService
 import json

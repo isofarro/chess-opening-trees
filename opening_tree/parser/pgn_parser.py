@@ -1,7 +1,6 @@
-from typing import Iterator, Tuple, Optional
+from typing import Iterator, Tuple
 import chess.pgn
 from pathlib import Path
-from datetime import datetime
 
 class PGNParser:
     @staticmethod

@@ -1,4 +1,3 @@
-from pathlib import Path
 import argparse
 from .commands.build import build_tree
 from .commands.prune import prune_tree
