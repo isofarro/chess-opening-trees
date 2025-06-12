@@ -182,10 +182,10 @@ class OpeningTreeRepository:
 
     def get_position_by_fen(self, fen: str) -> Dict[str, Any] | None:
         """Get a position by its FEN string.
-        
+
         Args:
             fen: The FEN string to look up. Can be full or normalized FEN.
-            
+
         Returns:
             Position data if found, None otherwise.
         """
@@ -203,15 +203,15 @@ class OpeningTreeRepository:
 
     def get_moves_from_position(self, position_id: int) -> List[Dict[str, Any]]:
         """Get all moves and their statistics from a given position.
-        
+
         Args:
             position_id: ID of the position to get moves from.
-            
+
         Returns:
             List of moves with their statistics.
         """
         cursor = self.conn.execute("""
-            SELECT 
+            SELECT
                 m.move,
                 p.fen,
                 s.total_games,
@@ -227,7 +227,7 @@ class OpeningTreeRepository:
             WHERE m.from_position_id = ?
             ORDER BY s.total_games DESC
         """, (position_id,))
-        
+
         return [{
             "move": row[0],
             "fen": row[1],

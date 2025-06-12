@@ -103,7 +103,7 @@ class OpeningTreeService:
     @staticmethod
     def _get_player_performance(game: chess.pgn.Game, color: str) -> int:
         """Calculate player performance from game headers and result.
-        
+
         For each player, performance is calculated based on opponent's rating and game result:
         - Win: opponent's rating + 400 (with floor of player's own rating)
         - Draw: opponent's rating
@@ -114,7 +114,7 @@ class OpeningTreeService:
             player_elo = int(game.headers.get(f'{color}Elo', '0'))
             opp_color = 'Black' if color == 'White' else 'White'
             opp_elo = int(game.headers.get(f'{opp_color}Elo', '0'))
-            
+
             # Determine if the player won, lost, or drew
             if color == 'White':
                 if result == '1-0':  # White win
@@ -182,10 +182,10 @@ class OpeningTreeService:
 
     def query_position(self, fen: str) -> Dict[str, Any]:
         """Query a position and its possible moves with statistics.
-        
+
         Args:
             fen: The FEN string to query (can be full or normalized)
-            
+
         Returns:
             Dictionary containing the position FEN and list of possible moves with statistics
         """
@@ -194,20 +194,20 @@ class OpeningTreeService:
         position = self.repository.get_position_by_fen(normalized_fen)
         if not position:
             return None
-        
+
         # Get raw moves data
         moves = self.repository.get_moves_from_position(position['id'])
-        
+
         # Transform the moves data
         for move in moves:
             # Calculate average rating and performance
             move['rating'] = int(move['total_player_elo'] / move['total_games'])
             move['performance'] = int(move['total_player_performance'] / move['total_games'])
-            
+
             # Remove raw data fields used for calculations
             del move['total_player_elo']
             del move['total_player_performance']
-        
+
         return {
             "fen": position['fen'],
             "moves": moves

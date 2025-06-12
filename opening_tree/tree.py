@@ -12,7 +12,7 @@ def main():
 
     # Build command
     build_parser = subparsers.add_parser(
-        "build", 
+        "build",
         help="Build a new opening tree from PGN files"
     )
     build_parser.add_argument(
@@ -82,7 +82,7 @@ def main():
     )
 
     args = parser.parse_args()
-    
+
     if args.command == "build":
         build_tree(args)
     elif args.command == "prune":
