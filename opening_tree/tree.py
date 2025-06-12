@@ -2,6 +2,7 @@ from pathlib import Path
 import argparse
 from .commands.build import build_tree
 from .commands.prune import prune_tree
+from .commands.query import query_tree
 
 def main():
     parser = argparse.ArgumentParser(
@@ -59,12 +60,35 @@ def main():
         help="Number of positions to process in each batch (default: 1000)"
     )
 
+    # Query command
+    query_parser = subparsers.add_parser(
+        "query",
+        help="Query the opening tree for a specific position"
+    )
+    query_parser.add_argument(
+        "db",
+        help="Path to the SQLite database file to query"
+    )
+    query_parser.add_argument(
+        "--fen",
+        required=True,
+        help="FEN string of the position to query"
+    )
+    query_parser.add_argument(
+        "--output",
+        default="json",
+        choices=["json"],
+        help="Output format (default: json)"
+    )
+
     args = parser.parse_args()
     
     if args.command == "build":
         build_tree(args)
     elif args.command == "prune":
         prune_tree(args)
+    elif args.command == "query":
+        query_tree(args)
     elif not args.command:
         parser.print_help()
 

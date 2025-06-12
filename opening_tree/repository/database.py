@@ -1,4 +1,4 @@
-from typing import Dict, Any
+from typing import Dict, Any, List
 import sqlite3
 
 class OpeningTreeRepository:
@@ -179,3 +179,63 @@ class OpeningTreeRepository:
                 'import_date': row[4]
             }
         return None
+
+    def get_position_by_fen(self, fen: str) -> Dict[str, Any] | None:
+        """Get a position by its FEN string.
+        
+        Args:
+            fen: The FEN string to look up. Can be full or normalized FEN.
+            
+        Returns:
+            Position data if found, None otherwise.
+        """
+        cursor = self.conn.execute(
+            "SELECT id, fen FROM positions WHERE fen LIKE ?",
+            (f"{fen}%",)  # Use LIKE to match both full and normalized FENs
+        )
+        row = cursor.fetchone()
+        if row:
+            return {
+                'id': row[0],
+                'fen': row[1]
+            }
+        return None
+
+    def get_moves_from_position(self, position_id: int) -> List[Dict[str, Any]]:
+        """Get all moves and their statistics from a given position.
+        
+        Args:
+            position_id: ID of the position to get moves from.
+            
+        Returns:
+            List of moves with their statistics.
+        """
+        cursor = self.conn.execute("""
+            SELECT 
+                m.move,
+                p.fen,
+                s.total_games,
+                s.white_wins,
+                s.draws,
+                s.black_wins,
+                s.total_player_elo,
+                s.total_player_performance,
+                s.last_played_date
+            FROM moves m
+            JOIN positions p ON m.to_position_id = p.id
+            JOIN position_statistics s ON m.to_position_id = s.position_id
+            WHERE m.from_position_id = ?
+            ORDER BY s.total_games DESC
+        """, (position_id,))
+        
+        return [{
+            "move": row[0],
+            "fen": row[1],
+            "total_games": row[2],
+            "white_wins": row[3],
+            "draws": row[4],
+            "black_wins": row[5],
+            "total_player_elo": row[6],
+            "total_player_performance": row[7],
+            "last_played_date": row[8]
+        } for row in cursor.fetchall()]

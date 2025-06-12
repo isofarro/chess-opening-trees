@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List, NamedTuple
+from typing import List, NamedTuple, Dict, Any
 import chess
 import hashlib
 from datetime import datetime
@@ -92,10 +92,57 @@ class OpeningTreeService:
                 file_hash=metadata.file_hash
             )
 
+    @staticmethod
+    def _get_player_rating(game: chess.pgn.Game, color: str) -> int:
+        """Extract player rating from game headers."""
+        try:
+            return int(game.headers.get(f'{color}Elo', '0'))
+        except ValueError:
+            return 0
+
+    @staticmethod
+    def _get_player_performance(game: chess.pgn.Game, color: str) -> int:
+        """Calculate player performance from game headers and result.
+        
+        For each player, performance is calculated based on opponent's rating and game result:
+        - Win: opponent's rating + 400 (with floor of player's own rating)
+        - Draw: opponent's rating
+        - Loss: opponent's rating - 400 (with ceiling of player's own rating)
+        """
+        try:
+            result = game.headers.get('Result', '*')
+            player_elo = int(game.headers.get(f'{color}Elo', '0'))
+            opp_color = 'Black' if color == 'White' else 'White'
+            opp_elo = int(game.headers.get(f'{opp_color}Elo', '0'))
+            
+            # Determine if the player won, lost, or drew
+            if color == 'White':
+                if result == '1-0':  # White win
+                    return max(player_elo, opp_elo + 400)
+                elif result == '0-1':  # White loss
+                    return min(player_elo, opp_elo - 400)
+                else:  # Draw
+                    return opp_elo
+            else:  # color == 'Black'
+                if result == '0-1':  # Black win
+                    return max(player_elo, opp_elo + 400)
+                elif result == '1-0':  # Black loss
+                    return min(player_elo, opp_elo - 400)
+                else:  # Draw
+                    return opp_elo
+        except ValueError:
+            return 0
+
     def _process_game(self, game: chess.pgn.Game) -> GameData:
         """Process a single game and return structured game data."""
         moves = []
         ply_count = 0
+
+        # Extract player ratings and performance
+        white_elo = self._get_player_rating(game, 'White')
+        black_elo = self._get_player_rating(game, 'Black')
+        white_performance = self._get_player_performance(game, 'White')
+        black_performance = self._get_player_performance(game, 'Black')
 
         for position_fen, move_san in self.parser.extract_moves(game):
             if ply_count >= self.max_ply:
@@ -113,21 +160,7 @@ class OpeningTreeService:
             moves.append(GameMove(from_position, to_position, move_san))
             ply_count += 1
 
-        white_elo = int(game.headers.get('WhiteElo', '0'))
-        black_elo = int(game.headers.get('BlackElo', '0'))
         result = game.headers.get('Result', '*')
-
-        # Calculate performance ratings
-        if result == '1-0':  # White win
-            white_performance = max(white_elo, black_elo + 400)
-            black_performance = min(black_elo, white_elo - 400)
-        elif result == '0-1':  # Black win
-            white_performance = min(white_elo, black_elo - 400)
-            black_performance = max(black_elo, white_elo + 400)
-        else:  # Draw or unknown result
-            white_performance = black_elo
-            black_performance = white_elo
-
         game_date = game.headers.get('Date', '')
         if game_date == '????.??.??':
             game_date = ''
@@ -146,3 +179,36 @@ class OpeningTreeService:
     def normalise_fen(fen: str) -> str:
         """Normalize a FEN string by keeping only the first 4 segments."""
         return ' '.join(fen.split()[:4])
+
+    def query_position(self, fen: str) -> Dict[str, Any]:
+        """Query a position and its possible moves with statistics.
+        
+        Args:
+            fen: The FEN string to query (can be full or normalized)
+            
+        Returns:
+            Dictionary containing the position FEN and list of possible moves with statistics
+        """
+        # Normalize FEN and get position data
+        normalized_fen = self.normalise_fen(fen)
+        position = self.repository.get_position_by_fen(normalized_fen)
+        if not position:
+            return None
+        
+        # Get raw moves data
+        moves = self.repository.get_moves_from_position(position['id'])
+        
+        # Transform the moves data
+        for move in moves:
+            # Calculate average rating and performance
+            move['rating'] = int(move['total_player_elo'] / move['total_games'])
+            move['performance'] = int(move['total_player_performance'] / move['total_games'])
+            
+            # Remove raw data fields used for calculations
+            del move['total_player_elo']
+            del move['total_player_performance']
+        
+        return {
+            "fen": position['fen'],
+            "moves": moves
+        }
