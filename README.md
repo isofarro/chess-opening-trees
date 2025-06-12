@@ -66,3 +66,25 @@ Query the opening tree by position
 
 - `fen` is the FEN string of the position
 - `output` is the format of the output. Defaults to `json`.
+
+The JSON output looks like this:
+
+```json
+{
+  "fen": "rn1qkb1r/ppp1pppp/5nb1/4N3/3P2P1/2N4P/PPP5/R1BQKB1R b KQkq -",
+  "moves": [
+    {
+      "move": "e6",
+      "fen": "rn1qkb1r/ppp2ppp/4pnb1/4N3/3P2P1/2N4P/PPP5/R1BQKB1R w KQkq -",
+      "total_games": 3333,
+      "white_wins": 2006,
+      "draws": 160,
+      "black_wins": 1167,
+      "last_played_date": "2025-05-31",
+      "rating": 2154,
+      "performance": 2059
+    },
+    ...
+  ]
+}
+ ```
