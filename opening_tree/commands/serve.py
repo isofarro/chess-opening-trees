@@ -10,34 +10,43 @@ class OpeningTreeHandler(BaseHTTPRequestHandler):
     def __init__(self, trees: Dict[str, OpeningTreeService], *args, **kwargs):
         self.trees = trees
         self.port = kwargs.pop('port', 2882)
+        self.protocol = kwargs.pop('protocol', 'http')
+        self.domain = kwargs.pop('domain', 'localhost')
         # Need to call parent's __init__ with original args
         super().__init__(*args, **kwargs)
+
+    @property
+    def base_url(self) -> str:
+        """Get the base URL for the server."""
+        return f"{self.protocol}://{self.domain}:{self.port}"
 
     def do_GET(self):
         # Parse the URL path
         parsed_path = urlparse(self.path)
         path_segments = parsed_path.path.strip('/').split('/')
 
-        # Handle root path - list available trees
+        # Route to appropriate handler
         if not path_segments[0]:
-            tree_list = [{
-                'name': name,
-                'path': f'http://localhost:{self.port}/{name}/{{fen}}'
-            } for name in self.trees.keys()]
-
-            self.send_response(200)
-            self.send_header('Content-Type', 'application/json')
-            self.end_headers()
-            self.wfile.write(json.dumps(tree_list, indent=2).encode())
-            return
-
-        # Path should be /tree_name/fen
-        if len(path_segments) != 2:
+            self.handle_list_trees()
+        elif len(path_segments) == 2:
+            self.handle_query_position(path_segments[0], path_segments[1])
+        else:
             self.send_error(400, "Invalid URL format. Expected: /tree_name/fen")
-            return
 
-        tree_name, encoded_fen = path_segments
+    def handle_list_trees(self):
+        """Handle GET request for root path - list available trees."""
+        tree_list = [{
+            'name': name,
+            'path': f'{self.base_url}/{name}/{{fen}}'
+        } for name in self.trees.keys()]
 
+        self.send_response(200)
+        self.send_header('Content-Type', 'application/json')
+        self.end_headers()
+        self.wfile.write(json.dumps(tree_list, indent=2).encode())
+
+    def handle_query_position(self, tree_name: str, encoded_fen: str):
+        """Handle GET request for position query in a specific tree."""
         # Check if tree exists
         if tree_name not in self.trees:
             self.send_error(404, f"Tree '{tree_name}' not found")
@@ -58,10 +67,10 @@ class OpeningTreeHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(json.dumps(result, indent=2).encode())
 
-def create_handler(trees: Dict[str, OpeningTreeService], port: int):
+def create_handler(trees: Dict[str, OpeningTreeService], port: int, protocol: str = 'http', domain: str = 'localhost'):
     """Create a handler class with the tree services dictionary."""
     def handler(*args, **kwargs):
-        return OpeningTreeHandler(trees, port=port, *args, **kwargs)
+        return OpeningTreeHandler(trees, port=port, protocol=protocol, domain=domain, *args, **kwargs)
     return handler
 
 def serve_tree(args) -> None:
@@ -74,16 +83,18 @@ def serve_tree(args) -> None:
 
     # Create and start the server
     port = args.port or 2882
-    handler = create_handler(trees, port)
-    server = HTTPServer(('localhost', port), handler)
+    protocol = 'http'  # Could be made configurable via args if needed
+    domain = 'localhost'  # Could be made configurable via args if needed
+    handler = create_handler(trees, port, protocol, domain)
+    server = HTTPServer((domain, port), handler)
 
-    print(f"Starting server on port {port}")
+    print(f"Starting server on {protocol}://{domain}:{port}")
     print("Available trees:")
     for name in trees.keys():
         print(f"  - {name}")
     print("\nEndpoints:")
-    print(f"  GET http://localhost:{port}/          # List available trees")
-    print(f"  GET http://localhost:{port}/tree_name/encoded_fen  # Query position")
+    print(f"  GET {protocol}://{domain}:{port}/          # List available trees")
+    print(f"  GET {protocol}://{domain}:{port}/tree_name/encoded_fen  # Query position")
 
     try:
         server.serve_forever()
