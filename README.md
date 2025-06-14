@@ -88,3 +88,26 @@ The JSON output looks like this:
   ]
 }
  ```
+
+## HTTP JSON API
+
+```
+    ./tree.py serve \
+    --trees bdg-cce pgn/openings/D00-bdg-games-cce-2025-05.db
+    --port 2882
+```
+
+Starts an HTTP server on port 2882. The server supports multiple trees, each are
+specified by `-trees {name} {dbFile}`.
+
+The URL to query a position in an opening
+tree is the pattern `http://localhost:2882/{tree}/{fen}` where:
+
+* `{tree}` is the name of the tree defined in the `serve` command
+* `{fen}` is the FEN string of the position, URL encoded.
+
+```
+curl http://localhost:2882/bdg-cce/rn1qkb1r%2Fpp2pppp%2F2p2n2%2F8%2F3P4%2F2N2Q1P%2FPPP3P1%2FR1B1KB1R%20w%20KQkq%20-%200%208
+```
+
+This returns a JSON response in the same structure as the `query` command above.
