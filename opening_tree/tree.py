@@ -2,6 +2,7 @@ import argparse
 from opening_tree.commands.build import build_tree
 from opening_tree.commands.prune import prune_tree
 from opening_tree.commands.query import query_tree
+from opening_tree.commands.serve import serve_tree
 
 def main():
     parser = argparse.ArgumentParser(
@@ -80,6 +81,26 @@ def main():
         help="Output format (default: json)"
     )
 
+    # Serve command
+    serve_parser = subparsers.add_parser(
+        "serve",
+        help="Start an HTTP server to serve opening tree data"
+    )
+    serve_parser.add_argument(
+        "--trees",
+        nargs="+",
+        action="append",
+        required=True,
+        metavar=("NAME", "DB"),
+        help="Tree name and database path pairs (e.g., --trees main db1.db --trees test db2.db)"
+    )
+    serve_parser.add_argument(
+        "--port",
+        type=int,
+        default=2882,
+        help="Port to run the server on (default: 2882)"
+    )
+
     args = parser.parse_args()
 
     if args.command == "build":
@@ -88,6 +109,8 @@ def main():
         prune_tree(args)
     elif args.command == "query":
         query_tree(args)
+    elif args.command == "serve":
+        serve_tree(args)
     elif not args.command:
         parser.print_help()
 
