@@ -6,7 +6,7 @@ Creates opening trees from PGN files. The tree is an SQLite database.
 
 ## Python and uv set-up
 
-```
+```bash
 python3 -m venv .venv
 source .venv/bin/activate
 pip install uv
@@ -14,7 +14,7 @@ pip install uv
 
 ## Installation
 
-```
+```bash
 git clone https://github.com/isofarro/chess-opening-trees.git
 cd chess-opening-trees
 uv install
@@ -29,7 +29,7 @@ We build a tree from one or more PGN files. We can run the build repeatedly unti
 all the PGN files we want to add are added. This means we can update the opening
 tree regularly, as new game databases are available.
 
-```
+```bash
 ./tree.py build \
     --db my_tree.db \
     --max-ply 60 \
@@ -42,7 +42,7 @@ tree regularly, as new game databases are available.
 This removes positions that have been visited once, and not within a specific
 depth of the last position with more than one game.
 
-```
+```bash
 ./tree.py prune \
     my_tree.db \
     --max-closeness 5
@@ -57,7 +57,7 @@ depth of the last position with more than one game.
 
 Query the opening tree by position
 
-```
+```bash
 ./tree.py query
     my_tree.db
     --fen "r1bq1rk1/2p1bppp/p1np1n2/1p2p3/4P3/1BP2N1P/PP1P1PP1/RNBQR1K1 b - - 0 9"
@@ -91,7 +91,7 @@ The JSON output looks like this:
 
 ## HTTP JSON API
 
-```
+```bash
     ./tree.py serve \
     --trees bdg-cce pgn/openings/D00-bdg-games-cce-2025-05.db
     --port 2882
@@ -106,8 +106,24 @@ tree is the pattern `http://localhost:2882/{tree}/{fen}` where:
 * `{tree}` is the name of the tree defined in the `serve` command
 * `{fen}` is the FEN string of the position, URL encoded.
 
-```
+```bash
 curl http://localhost:2882/bdg-cce/rn1qkb1r%2Fpp2pppp%2F2p2n2%2F8%2F3P4%2F2N2Q1P%2FPPP3P1%2FR1B1KB1R%20w%20KQkq%20-%200%208
 ```
 
 This returns a JSON response in the same structure as the `query` command above.
+
+We can get a list of trees by doing a GET on `http://localhost:2882/`, this returns
+the payload:
+
+```json
+[
+  {
+    "name": "main",
+    "path": "http://localhost:2882/main/{fen}"
+  },
+  {
+    "name": "bdg-cce",
+    "path": "http://localhost:2882/bdg-cce/{fen}"
+  }
+]
+```
