@@ -229,7 +229,8 @@ class OpeningTreeRepository:
                 s.black_wins,
                 s.total_player_elo,
                 s.total_player_performance,
-                s.last_played_date
+                s.last_played_date,
+                s.game_ref
             FROM moves m
             JOIN positions p ON m.to_position_id = p.id
             JOIN position_statistics s ON m.to_position_id = s.position_id
@@ -246,5 +247,6 @@ class OpeningTreeRepository:
             "black_wins": row[5],
             "total_player_elo": row[6],
             "total_player_performance": row[7],
-            "last_played_date": row[8]
+            "last_played_date": row[8],
+            "game_ref": row[9]
         } for row in cursor.fetchall()]
