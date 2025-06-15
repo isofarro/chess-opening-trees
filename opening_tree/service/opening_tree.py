@@ -23,6 +23,7 @@ class GameData(NamedTuple):
 
 class PGNFileMetadata(NamedTuple):
     filename: str
+    name: str
     last_modified: str
     file_size: int
     file_hash: str
@@ -51,8 +52,12 @@ class OpeningTreeService:
         # Convert timestamp to ISO format
         last_modified_date = datetime.fromtimestamp(last_modified / 1e9).isoformat()
 
+        # Extract name from path (filename without extension)
+        name = pgn_path.stem
+
         return PGNFileMetadata(
             filename=str(pgn_path),
+            name=name,
             last_modified=last_modified_date,
             file_size=file_size,
             file_hash=file_hash
@@ -98,6 +103,7 @@ class OpeningTreeService:
 
             self.repository.add_imported_pgn_file(
                 filename=metadata.filename,
+                name=metadata.name,
                 last_modified=metadata.last_modified,
                 file_size=metadata.file_size,
                 file_hash=metadata.file_hash,

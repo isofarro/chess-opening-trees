@@ -40,6 +40,7 @@ class OpeningTreeRepository:
             CREATE TABLE IF NOT EXISTS imported_pgn_files (
                 id INTEGER PRIMARY KEY,
                 filename TEXT NOT NULL,
+                name TEXT NOT NULL,
                 last_modified TEXT NOT NULL,
                 file_size INTEGER NOT NULL,
                 file_hash TEXT NOT NULL,
@@ -148,14 +149,14 @@ class OpeningTreeRepository:
             self.conn.rollback()
             raise e
 
-    def add_imported_pgn_file(self, filename: str, last_modified: str, file_size: int, file_hash: str, total_games: int) -> None:
+    def add_imported_pgn_file(self, filename: str, name: str, last_modified: str, file_size: int, file_hash: str, total_games: int) -> None:
         """Record a successfully imported PGN file."""
         self.conn.execute("BEGIN TRANSACTION")
         try:
             self.conn.execute("""
-                INSERT INTO imported_pgn_files (filename, last_modified, file_size, file_hash, total_games)
-                VALUES (?, ?, ?, ?, ?)
-            """, (filename, last_modified, file_size, file_hash, total_games))
+                INSERT INTO imported_pgn_files (filename, name, last_modified, file_size, file_hash, total_games)
+                VALUES (?, ?, ?, ?, ?, ?)
+            """, (filename, name, last_modified, file_size, file_hash, total_games))
             self.conn.commit()
         except Exception as e:
             self.conn.rollback()
