@@ -71,6 +71,8 @@ class OpeningTreeService:
 
         # Process all games in the file
         games_processed = False
+        total_games = 0
+        last_game = None
         for game in self.parser.parse_file(pgn_path):
             try:
                 game_data = self._process_game(game)
@@ -80,16 +82,26 @@ class OpeningTreeService:
                     continue
                 self.repository.add_game_to_opening_tree(game_data)
                 games_processed = True
+                total_games += 1
+                last_game = game
             except Exception as e:
                 print(f"Error processing game: {e}")
 
         # If at least one game was processed successfully, record the file import
         if games_processed:
+            # Get the total number of games from the last game's GameNo header
+            try:
+                if last_game and 'GameNo' in last_game.headers:
+                    total_games = int(last_game.headers['GameNo'])
+            except (ValueError, TypeError):
+                pass  # Keep the counted total if GameNo is invalid
+
             self.repository.add_imported_pgn_file(
                 filename=metadata.filename,
                 last_modified=metadata.last_modified,
                 file_size=metadata.file_size,
-                file_hash=metadata.file_hash
+                file_hash=metadata.file_hash,
+                total_games=total_games
             )
 
     @staticmethod

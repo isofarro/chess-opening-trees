@@ -17,12 +17,15 @@ class PGNParser:
                 if game is None:
                     break
 
+                game_count += 1
+                print(f"Game: {game_count}", end='\r')
+
                 # Skip games that use chess variants
                 if 'Variant' in game.headers:
                     continue
 
-                game_count += 1
-                print(f"Game: {game_count}", end='\r')
+                game.headers['GameNo'] = str(game_count)
+
                 yield game
 
     @staticmethod
