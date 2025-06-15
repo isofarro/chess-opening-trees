@@ -20,6 +20,7 @@ class GameData(NamedTuple):
     date: str
     white_performance: int
     black_performance: int
+    game_ref: str
 
 class PGNFileMetadata(NamedTuple):
     filename: str
@@ -80,7 +81,7 @@ class OpeningTreeService:
         last_game = None
         for game in self.parser.parse_file(pgn_path):
             try:
-                game_data = self._process_game(game)
+                game_data = self._process_game(game, metadata.name)
                 # Skip games where either player is below the minimum rating
                 if (game_data.white_elo < self.min_rating or
                     game_data.black_elo < self.min_rating):
@@ -151,9 +152,11 @@ class OpeningTreeService:
         except ValueError:
             return 0
 
-    def _process_game(self, game: chess.pgn.Game) -> GameData:
+    def _process_game(self, game: chess.pgn.Game, pgn_name: str = '') -> GameData:
         """Process a single game and return structured game data."""
         moves = []
+        game_no = game.headers.get('GameNo', '0')
+        game_ref = f"{pgn_name}:{game_no}"
         ply_count = 0
 
         # Extract player ratings and performance
@@ -188,7 +191,8 @@ class OpeningTreeService:
             black_elo=black_elo,
             date=game_date,
             white_performance=white_performance,
-            black_performance=black_performance
+            black_performance=black_performance,
+            game_ref=game_ref
         )
 
     @staticmethod

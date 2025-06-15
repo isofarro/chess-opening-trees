@@ -34,6 +34,7 @@ class OpeningTreeRepository:
                 total_player_elo INTEGER NOT NULL DEFAULT 0,
                 total_player_performance INTEGER NOT NULL DEFAULT 0,
                 last_played_date TEXT NOT NULL DEFAULT '',
+                game_ref TEXT NOT NULL DEFAULT '',
                 FOREIGN KEY (position_id) REFERENCES positions (id)
             );
 
@@ -75,8 +76,8 @@ class OpeningTreeRepository:
         self.conn.execute("""
             INSERT INTO position_statistics (
                 position_id, total_games, white_wins, black_wins, draws,
-                total_player_elo, total_player_performance, last_played_date
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                total_player_elo, total_player_performance, last_played_date, game_ref
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(position_id) DO UPDATE SET
                 total_games = total_games + excluded.total_games,
                 white_wins = white_wins + excluded.white_wins,
@@ -84,7 +85,11 @@ class OpeningTreeRepository:
                 draws = draws + excluded.draws,
                 total_player_elo = total_player_elo + excluded.total_player_elo,
                 total_player_performance = total_player_performance + excluded.total_player_performance,
-                last_played_date = MAX(last_played_date, excluded.last_played_date)
+                last_played_date = MAX(last_played_date, excluded.last_played_date),
+                game_ref = CASE
+                    WHEN excluded.last_played_date > last_played_date THEN excluded.game_ref
+                    ELSE game_ref
+                END
         """, (
             position_id,
             new_stats['total_games'],
@@ -93,7 +98,8 @@ class OpeningTreeRepository:
             new_stats['draws'],
             new_stats['total_player_elo'],
             new_stats['total_player_performance'],
-            new_stats['last_played_date']
+            new_stats['last_played_date'],
+            new_stats['game_ref']
         ))
 
     def _update_position_stats(self, position_id: int, game_data: 'GameData', is_white_to_move: bool) -> None:
@@ -116,7 +122,8 @@ class OpeningTreeRepository:
             'draws': 1 if game_data.result == '1/2-1/2' else 0,
             'total_player_elo': player_elo,
             'total_player_performance': player_performance,
-            'last_played_date': game_data.date
+            'last_played_date': game_data.date,
+            'game_ref': game_data.game_ref
         }
         self.update_statistics(position_id, stats)
 
