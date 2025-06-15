@@ -21,9 +21,10 @@ def main():
         help="One or more PGN files to process (glob patterns are supported, e.g., *.pgn)"
     )
     build_parser.add_argument(
-        "--db",
+        "--tree",
+        dest="tree",
         default=None,
-        help="Path to the SQLite database file (default: same as PGN file with .db extension)"
+        help="Path to the opening tree file (default: same as PGN file with .tree extension)"
     )
     build_parser.add_argument(
         "--max-ply",
@@ -44,8 +45,8 @@ def main():
         help="Prune single-game positions from the opening tree"
     )
     prune_parser.add_argument(
-        "db",
-        help="Path to the SQLite database file to prune"
+        "tree",
+        help="The tree file to prune"
     )
     prune_parser.add_argument(
         "--max-closeness",
@@ -56,8 +57,8 @@ def main():
     prune_parser.add_argument(
         "--batch-size",
         type=int,
-        default=1000,
-        help="Number of positions to process in each batch (default: 1000)"
+        default=5000,
+        help="Number of positions to process in each batch (default: 5000)"
     )
 
     # Query command
@@ -66,8 +67,8 @@ def main():
         help="Query the opening tree for a specific position"
     )
     query_parser.add_argument(
-        "db",
-        help="Path to the SQLite database file to query"
+        "tree",
+        help="The tree file to query"
     )
     query_parser.add_argument(
         "--fen",
@@ -91,8 +92,8 @@ def main():
         nargs="+",
         action="append",
         required=True,
-        metavar=("NAME", "DB"),
-        help="Tree name and database path pairs (e.g., --trees main db1.db --trees test db2.db)"
+        metavar=("NAME", "TREE"),
+        help="Tree name and file pairs (e.g., --trees main main.tree --trees test test.tree)"
     )
     serve_parser.add_argument(
         "--port",

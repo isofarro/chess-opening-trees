@@ -5,7 +5,7 @@ def prune_tree(args):
     def progress_callback(stage: str, count: int):
         print(f"{stage}: {count} positions")
 
-    pruner = TreePruner(args.db)
+    pruner = TreePruner(args.tree)
     pruner.prune_single_game_positions(
         max_distance=args.max_closeness,
         batch_size=args.batch_size,

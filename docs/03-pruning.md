@@ -21,7 +21,7 @@ tree branch.
 
 ```
 ./tree.py prune \
-    --db my_tree.db \
+    --tree my_tree.tree \
     --max-closeness 5 \
     --batch-size 2000
 ```

@@ -77,8 +77,8 @@ def serve_tree(args) -> None:
     """Start an HTTP server to serve opening tree data."""
     # Create a dictionary of tree name to service
     trees = {}
-    for name, db_path in args.trees:
-        repository = OpeningTreeRepository(db_path)
+    for name, tree_path in args.trees:
+        repository = OpeningTreeRepository(tree_path)
         trees[name] = OpeningTreeService(repository)
 
     # Create and start the server

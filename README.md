@@ -31,7 +31,7 @@ tree regularly, as new game databases are available.
 
 ```bash
 ./tree.py build \
-    --db my_tree.db \
+    --tree my_tree.tree \
     --max-ply 60 \
     --min-rating 2000 \
     pgn/
@@ -44,7 +44,7 @@ depth of the last position with more than one game.
 
 ```bash
 ./tree.py prune \
-    my_tree.db \
+    my_tree.tree \
     --max-closeness 5
     --batch-size 2000
 ```
@@ -59,7 +59,7 @@ Query the opening tree by position
 
 ```bash
 ./tree.py query
-    my_tree.db
+    my_tree.tree
     --fen "r1bq1rk1/2p1bppp/p1np1n2/1p2p3/4P3/1BP2N1P/PP1P1PP1/RNBQR1K1 b - - 0 9"
     --output json
 ```
@@ -93,12 +93,12 @@ The JSON output looks like this:
 
 ```bash
     ./tree.py serve \
-    --trees bdg-cce pgn/openings/D00-bdg-games-cce-2025-05.db
+    --trees bdg-cce pgn/openings/D00-bdg-games-cce-2025-05.tree
     --port 2882
 ```
 
 Starts an HTTP server on port 2882. The server supports multiple trees, each are
-specified by `-trees {name} {dbFile}`.
+specified by `-trees {name} {treeFile}`.
 
 The URL to query a position in an opening
 tree is the pattern `http://localhost:2882/{tree}/{fen}` where:

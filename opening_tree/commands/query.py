@@ -4,7 +4,7 @@ import json
 
 def query_tree(args) -> None:
     """Query the opening tree for a specific position."""
-    repository = OpeningTreeRepository(args.db)
+    repository = OpeningTreeRepository(args.tree)
     service = OpeningTreeService(repository)
 
     # Query the position through the service layer

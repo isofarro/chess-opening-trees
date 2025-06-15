@@ -5,25 +5,25 @@ from opening_tree.maintenance.pruning.repository import PruningRepository
 import sqlite3
 
 class TreePruner:
-    def __init__(self, main_db_path: str, workspace_db_path: Optional[str] = None):
+    def __init__(self, main_tree_path: str, workspace_tree_path: Optional[str] = None):
         """Initialize the tree pruner.
 
         Args:
-            main_db_path: Path to the main opening tree database
-            workspace_db_path: Optional path for the temporary workspace database
+            main_tree_path: Path to the main opening tree database
+            workspace_tree_path: Optional path for the temporary workspace database
         """
-        self.main_db_path = main_db_path
-        self.workspace_db_path = workspace_db_path or ':memory:'
+        self.main_tree_path = main_tree_path
+        self.workspace_tree_path = workspace_tree_path or ':memory:'
 
     def prune_single_game_positions(self,
                                    max_distance: int = 5,
                                    batch_size: int = 1000,
                                    progress_callback: Optional[Callable[[str, int], None]] = None):
-        conn = sqlite3.connect(self.workspace_db_path)
+        conn = sqlite3.connect(self.workspace_tree_path)
         try:
             # Create repository and attach main database
             repository = PruningRepository(conn)
-            repository.attach_main_database(self.main_db_path)
+            repository.attach_main_database(self.main_tree_path)
 
             # Create workspace schema
             repository.create_schema()

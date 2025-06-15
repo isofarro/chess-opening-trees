@@ -37,16 +37,16 @@ def build_tree(args) -> None:
         print("Error: No PGN files found matching the specified patterns")
         return
 
-    # If db_path is not provided, use the first PGN path with .db extension
-    db_path = args.db
-    if db_path is None:
+    # If tree_path is not provided, use the first PGN path with .tree extension
+    tree_path = args.tree
+    if tree_path is None:
         first_pgn = pgn_paths[0]
         if first_pgn.suffix.lower() == '.pgn':
-            db_path = str(first_pgn.with_suffix('.db'))
+            tree_path = str(first_pgn.with_suffix('.tree'))
         else:
-            db_path = 'opening_tree.db'
+            tree_path = 'opening_tree.tree'
 
-    repository = OpeningTreeRepository(db_path)
+    repository = OpeningTreeRepository(tree_path)
     service = OpeningTreeService(repository, max_ply=args.max_ply, min_rating=args.min_rating)
 
     # Process each PGN file

@@ -2,9 +2,9 @@ from typing import Dict, Any, List
 import sqlite3
 
 class OpeningTreeRepository:
-    def __init__(self, db_path: str):
-        self.db_path = db_path
-        self.conn = sqlite3.connect(db_path)
+    def __init__(self, tree_path: str):
+        self.tree_path = tree_path
+        self.conn = sqlite3.connect(tree_path)
         self._init_database()
 
     def _init_database(self) -> None:

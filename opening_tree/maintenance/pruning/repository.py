@@ -5,9 +5,9 @@ class PruningRepository:
     def __init__(self, conn):
         self.conn = conn
 
-    def attach_main_database(self, main_db_path: str):
+    def attach_main_database(self, main_tree_path: str):
         """Attach the main database for pruning operations."""
-        self.conn.execute('ATTACH DATABASE ? AS main_tree', (main_db_path,))
+        self.conn.execute('ATTACH DATABASE ? AS main_tree', (main_tree_path,))
 
     def detach_main_database(self):
         """Detach the main database after pruning operations."""

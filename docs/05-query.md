@@ -2,7 +2,7 @@
 
 ```
 ./tree.py query
-    my_tree.db
+    my_tree.tree
     --fen "r1bq1rk1/2p1bppp/p1np1n2/1p2p3/4P3/1BP2N1P/PP1P1PP1/RNBQR1K1 b - - 0 9"
     --output json
 ```
