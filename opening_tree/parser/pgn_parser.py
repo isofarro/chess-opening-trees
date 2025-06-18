@@ -33,7 +33,7 @@ class PGNParser:
         """Extract moves from a game, yielding (position_fen, move_san) pairs."""
         board = game.board()
         for move in game.mainline_moves():
-            position_fen = board.fen()
+            position_fen = board.fen(en_passant='fen')
             move_san = board.san(move)
             board.push(move)
             yield position_fen, move_san
