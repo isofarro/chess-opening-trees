@@ -37,6 +37,8 @@ tree regularly, as new game databases are available.
     pgn/
 ```
 
+The build keeps track of files it's imported, and skips them if there are no changes (file modification date, content hash). So you can run it multiple times against a directory, and it imports any new files found in the directory. Perfect for regularly updating a tree with weekly TWIC files.
+
 ### Pruning the tree of one game positions to a specific depth
 
 This removes positions that have been visited once, and not within a specific
@@ -52,6 +54,7 @@ depth of the last position with more than one game.
 * `--max-closeness` is the number of plies from a position that has more than 1 visit. Defaults to 5.
 * `--batch-size` is the number of positions to delete in each transaction. defaults to 1000.
 
+Each 1-game position has a game reference, so it's feasible when the tree grows to reach the leaf position to re-process the game and add in some more moves.
 
 ## Opening tree queries
 
