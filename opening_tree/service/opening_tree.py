@@ -176,7 +176,7 @@ class OpeningTreeService:
             board = chess.Board(position_fen)
             move = board.parse_san(move_san)
             board.push(move)
-            to_position = self.normalise_fen(board.fen())
+            to_position = self.normalise_fen(board.fen(en_passant='fen'))
 
             moves.append(GameMove(from_position, to_position, move_san))
             ply_count += 1
