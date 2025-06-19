@@ -49,6 +49,10 @@ def main():
         help="The tree file to prune"
     )
     prune_parser.add_argument(
+        "--workspace",
+        help="Path to the workspace tree file (default: in-memory database)"
+    )
+    prune_parser.add_argument(
         "--max-closeness",
         type=int,
         default=5,
