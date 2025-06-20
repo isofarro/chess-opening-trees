@@ -1,8 +1,4 @@
-import os
-import sqlite3
 from contextlib import contextmanager
-from typing import Optional
-from opening_tree.maintenance.pruning.repository import PruningRepository
 
 class PruningWorkspace:
     def __init__(self, repository):

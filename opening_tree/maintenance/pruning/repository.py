@@ -1,5 +1,5 @@
 from contextlib import contextmanager
-from typing import List, Tuple
+from typing import List
 
 class PruningRepository:
     def __init__(self, conn):
@@ -62,59 +62,80 @@ class PruningRepository:
             """)
             return cursor.rowcount
 
-    def mark_positions_near_core(self, initial_closeness: int, batch_size: int) -> int:
+    def mark_positions_near_core(self, initial_closeness: int) -> int:
         """Mark positions directly reachable from core positions.
         Returns number of positions updated."""
         with self.transaction() as conn:
-            cursor = conn.execute("""
-                WITH reachable AS (
-                    SELECT DISTINCT m.to_position_id as position_id
-                    FROM main_tree.moves m
-                    JOIN main_tree.position_statistics ps
-                        ON m.from_position_id = ps.position_id
-                    WHERE ps.total_games > 1
-                    AND EXISTS (
-                        SELECT 1 FROM position_closeness target
-                        WHERE target.position_id = m.to_position_id
-                        AND target.closeness = 0
-                        AND target.processed = FALSE
-                    )
-                    LIMIT ?
+            # Create temporary batch table
+            conn.execute("""
+                CREATE TEMPORARY TABLE batch_positions (
+                    position_id INTEGER PRIMARY KEY
                 )
+            """)
+
+            # Insert batch of positions to process
+            cursor = conn.execute("""
+                INSERT INTO batch_positions (position_id)
+                SELECT DISTINCT m.to_position_id
+                FROM main_tree.moves m
+                JOIN main_tree.position_statistics ps1 ON m.from_position_id = ps1.position_id
+                JOIN main_tree.position_statistics ps2 ON m.to_position_id = ps2.position_id
+                WHERE ps1.total_games > 1
+                AND ps2.total_games = 1;
+            """)
+
+            # Update positions using the temporary table
+            cursor = conn.execute("""
                 UPDATE position_closeness
                 SET closeness = ?, processed = TRUE
-                WHERE position_id IN (SELECT position_id FROM reachable)
-                AND closeness = 0
-                AND processed = FALSE
-            """, (batch_size, initial_closeness))
-            return conn.total_changes
+                WHERE position_id IN (SELECT position_id FROM batch_positions)
+            """, (initial_closeness,))
 
-    def update_closeness_batch(self, current_closeness: int, batch_size: int) -> int:
+            rows_updated = cursor.rowcount
+
+            # Drop the temporary table
+            conn.execute("DROP TABLE batch_positions")
+
+            return rows_updated
+
+    def update_closeness_batch(self, current_closeness: int) -> int:
         """Update closeness for positions reachable from higher closeness positions.
         Returns number of positions updated."""
         with self.transaction() as conn:
-            cursor = conn.execute("""
-                WITH reachable AS (
-                    SELECT DISTINCT m.to_position_id as position_id
-                    FROM main_tree.moves m
-                    JOIN position_closeness pd
-                        ON m.from_position_id = pd.position_id
-                    WHERE pd.closeness = ?
-                    AND EXISTS (
-                        SELECT 1 FROM position_closeness target
-                        WHERE target.position_id = m.to_position_id
-                        AND target.closeness = 0
-                        AND target.processed = FALSE
-                    )
-                    LIMIT ?
+            # Create temporary batch table
+            conn.execute("""
+                CREATE TEMPORARY TABLE batch_positions (
+                    position_id INTEGER PRIMARY KEY
                 )
+            """)
+
+            # Insert batch of positions to process
+            cursor = conn.execute("""
+                INSERT INTO batch_positions (position_id)
+                SELECT DISTINCT m.to_position_id
+                FROM main_tree.moves m
+                JOIN position_closeness pd
+                    ON m.from_position_id = pd.position_id
+                JOIN position_closeness target
+                    ON m.to_position_id = target.position_id
+                WHERE pd.closeness = ?
+                AND target.closeness = 0
+                AND target.processed = FALSE
+            """, (current_closeness + 1,))
+
+            # Update positions using the temporary table
+            cursor = conn.execute("""
                 UPDATE position_closeness
                 SET closeness = ?, processed = TRUE
-                WHERE position_id IN (SELECT position_id FROM reachable)
-                AND closeness = 0
-                AND processed = FALSE
-            """, (current_closeness + 1, batch_size, current_closeness))
-            return conn.total_changes
+                WHERE position_id IN (SELECT position_id FROM batch_positions)
+            """, (current_closeness,))
+
+            rows_updated = cursor.rowcount
+
+            # Drop the temporary table
+            conn.execute("DROP TABLE batch_positions")
+
+            return rows_updated
 
     def mark_positions_for_deletion(self) -> int:
         """Mark unreachable positions for deletion.

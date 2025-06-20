@@ -37,7 +37,7 @@ class TreePruner:
 
             # Calculate closeness to core positions
             analyser = GraphAnalyser(repository)
-            analyser.calculate_closeness(max_distance, batch_size)
+            analyser.calculate_closeness(max_distance, batch_size, progress_callback)
             if progress_callback:
                 count = self._count_marked_positions(repository)
                 progress_callback("Calculated position closeness", count)
