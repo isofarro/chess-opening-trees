@@ -24,7 +24,7 @@ class GraphAnalyser:
         # First, identify positions directly reachable from core positions
         positions_updated = self.repository.mark_positions_near_core(max_steps)
         if progress_callback:
-            progress_callback("Positions near core", positions_updated)
+            progress_callback("Positions 1 step from core", positions_updated)
         if not positions_updated:
             return
 
@@ -33,7 +33,7 @@ class GraphAnalyser:
         while remaining_steps > 0:
             positions_updated = self.repository.update_closeness_batch(remaining_steps)
             if progress_callback:
-                progress_callback(f"Positions {max_steps - remaining_steps} step from core", positions_updated)
+                progress_callback(f"Positions {max_steps - remaining_steps + 1} steps from core", positions_updated)
             if not positions_updated:
                 break
             remaining_steps -= 1
