@@ -7,6 +7,8 @@ from datetime import datetime
 from opening_tree.repository.database import OpeningTreeRepository
 from opening_tree.parser.pgn_parser import PGNParser
 
+from opening_tree.service.fen_utils import normalise_fen
+
 class GameMove(NamedTuple):
     from_position: str  # FEN
     to_position: str    # FEN
@@ -170,13 +172,13 @@ class OpeningTreeService:
                 break
 
             # Normalize FEN by keeping only the first 4 segments
-            from_position = self.normalise_fen(position_fen)
+            from_position = normalise_fen(position_fen)
 
             # Create the next position to get its FEN
             board = chess.Board(position_fen)
             move = board.parse_san(move_san)
             board.push(move)
-            to_position = self.normalise_fen(board.fen(en_passant='fen'))
+            to_position = normalise_fen(board.fen(en_passant='fen'))
 
             moves.append(GameMove(from_position, to_position, move_san))
             ply_count += 1
@@ -219,35 +221,6 @@ class OpeningTreeService:
 
         return '-'.join(valid_parts)
 
-    @staticmethod
-    def normalise_fen(fen: str) -> str:
-        """Normalize a FEN string by keeping only the first 4 segments."""
-        fen_parts = fen.split()[:4]
-
-        # Legal en-passant check
-        ep_square = fen_parts[3]
-
-        if ep_square != '-':
-            is_legal_ep = False
-            is_white_to_move = fen_parts[1] = 'w'
-            pawn = ('P' if is_white_to_move else 'p')
-            ep_file_idx = ord(ep_square[0]) - ord('a')
-            pawn_rank_no = (5 if is_white_to_move else 4)
-            rank_rle = fen_parts[0].split('/')[8 - pawn_rank_no]
-            rank = ''.join(
-                [' ' * int(c) if c.isdigit() else c for c in rank_rle]
-            )
-
-            if ep_file_idx > 0 and rank[ep_file_idx - 1] == pawn:
-                is_legal_ep = True
-            elif ep_file_idx < 7 and rank[ep_file_idx + 1] == pawn:
-                is_legal_ep = True
-
-            if is_legal_ep is False:
-                fen_parts[3] = '-'
-
-        return ' '.join(fen_parts)
-
     def query_position(self, fen: str) -> Dict[str, Any]:
         """Query a position and its possible moves with statistics.
 
@@ -258,7 +231,7 @@ class OpeningTreeService:
             Dictionary containing the position FEN and list of possible moves with statistics
         """
         # Normalize FEN and get position data
-        normalized_fen = self.normalise_fen(fen)
+        normalized_fen = normalise_fen(fen)
         position = self.repository.get_position_by_fen(normalized_fen)
         if not position:
             return None
