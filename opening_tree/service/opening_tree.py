@@ -222,7 +222,31 @@ class OpeningTreeService:
     @staticmethod
     def normalise_fen(fen: str) -> str:
         """Normalize a FEN string by keeping only the first 4 segments."""
-        return ' '.join(fen.split()[:4])
+        fen_parts = fen.split()[:4]
+
+        # Legal en-passant check
+        ep_square = fen_parts[3]
+
+        if ep_square != '-':
+            is_legal_ep = False
+            is_white_to_move = fen_parts[1] = 'w'
+            pawn = ('P' if is_white_to_move else 'p')
+            ep_file_idx = ord(ep_square[0]) - ord('a')
+            pawn_rank_no = (5 if is_white_to_move else 4)
+            rank_rle = fen_parts[0].split('/')[8 - pawn_rank_no]
+            rank = ''.join(
+                [' ' * int(c) if c.isdigit() else c for c in rank_rle]
+            )
+
+            if ep_file_idx > 0 and rank[ep_file_idx - 1] == pawn:
+                is_legal_ep = True
+            elif ep_file_idx < 7 and rank[ep_file_idx + 1] == pawn:
+                is_legal_ep = True
+
+            if is_legal_ep is False:
+                fen_parts[3] = '-'
+
+        return ' '.join(fen_parts)
 
     def query_position(self, fen: str) -> Dict[str, Any]:
         """Query a position and its possible moves with statistics.
