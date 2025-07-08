@@ -1,0 +1,13 @@
+{
+  "port": 3000,
+  "trees": [
+    {
+      "name": "main",
+      "path": "twic-2025.tree"
+    },
+    {
+      "name": "bdg",
+      "path": "pgn/openings/D00-bdg-games-cce-2025-05.tree"
+    }
+  ]
+}

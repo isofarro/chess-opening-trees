@@ -94,14 +94,39 @@ The JSON output looks like this:
 
 ## HTTP JSON API
 
+### Using command line arguments
+
 ```bash
     ./tree.py serve \
-    --trees bdg-cce pgn/openings/D00-bdg-games-cce-2025-05.tree
+    --trees bdg-cce pgn/openings/D00-bdg-games-cce-2025-05.tree \
     --port 2882
 ```
 
-Starts an HTTP server on port 2882. The server supports multiple trees, each are
-specified by `-trees {name} {treeFile}`.
+### Using a configuration file
+
+```bash
+    ./tree.py serve --config serve-config.json
+```
+
+The configuration file is in JSON format:
+
+```json
+{
+  "port": 3000,
+  "trees": [
+    {
+      "name": "main",
+      "path": "twic-2025.tree"
+    },
+    {
+      "name": "bdg",
+      "path": "pgn/openings/D00-bdg-games-cce-2025-05.tree"
+    }
+  ]
+}
+```
+
+Both methods start an HTTP server. The server supports multiple trees, each specified by name and tree file path. Command line arguments take precedence over config file settings.
 
 The URL to query a position in an opening
 tree is the pattern `http://localhost:2882/{tree}/{fen}` where:

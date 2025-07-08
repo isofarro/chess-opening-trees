@@ -92,10 +92,13 @@ def main():
         help="Start an HTTP server to serve opening tree data"
     )
     serve_parser.add_argument(
+        "--config",
+        help="Path to configuration file (JSON format)"
+    )
+    serve_parser.add_argument(
         "--trees",
         nargs="+",
         action="append",
-        required=True,
         metavar=("NAME", "TREE"),
         help="Tree name and file pairs (e.g., --trees main main.tree --trees test test.tree)"
     )
