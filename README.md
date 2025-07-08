@@ -128,6 +128,24 @@ The configuration file is in JSON format:
 
 Both methods start an HTTP server. The server supports multiple trees, each specified by name and tree file path. Command line arguments take precedence over config file settings.
 
+### Using WSGI with uvicorn (Production)
+
+For production deployment with nginx or other reverse proxies, use the WSGI application:
+
+```bash
+# Install dependencies
+uv install
+
+# Run with uvicorn directly
+export OPENING_TREE_CONFIG=serve-config.json
+uvicorn opening_tree.wsgi:app --host 0.0.0.0 --port 8000
+
+# Or use the convenience script
+python run_wsgi.py --config serve-config.json --port 8000 --host 0.0.0.0
+```
+
+The WSGI application provides the same API endpoints as the HTTP server but is designed for production use with proper ASGI servers like uvicorn.
+
 The URL to query a position in an opening
 tree is the pattern `http://localhost:2882/{tree}/{fen}` where:
 
