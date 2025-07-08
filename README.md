@@ -146,6 +146,49 @@ python run_wsgi.py --config serve-config.json --port 8000 --host 0.0.0.0
 
 The WSGI application provides the same API endpoints as the HTTP server but is designed for production use with proper ASGI servers like uvicorn.
 
+### Nginx Configuration
+
+For production deployment with a domain name, use Nginx as a reverse proxy. An example configuration is provided in <mcfile name="nginx-example.conf" path="nginx-example.conf"></mcfile>.
+
+To set up:
+
+1. **Start the WSGI application:**
+   ```bash
+   # Run on localhost (Nginx will proxy to this)
+   export OPENING_TREE_CONFIG=local-config.json
+   uvicorn opening_tree.wsgi:app --host 127.0.0.1 --port 8000
+   ```
+
+2. **Configure Nginx:**
+   ```bash
+   # Copy and modify the example config
+   sudo cp nginx-example.conf /etc/nginx/sites-available/openingtrees
+   
+   # Edit the configuration
+   sudo nano /etc/nginx/sites-available/openingtrees
+   # - Replace 'openingtrees.example.com' with your domain
+   # - Update SSL certificate paths
+   # - Adjust rate limiting and other settings as needed
+   
+   # Enable the site
+   sudo ln -s /etc/nginx/sites-available/openingtrees /etc/nginx/sites-enabled/
+   sudo nginx -t  # Test configuration
+   sudo systemctl reload nginx
+   ```
+
+3. **Set up SSL certificates** (using Let's Encrypt):
+   ```bash
+   sudo certbot --nginx -d openingtrees.example.com
+   ```
+
+The Nginx configuration includes:
+- HTTPS redirect and SSL termination
+- Security headers and rate limiting
+- CORS support for web frontends
+- Gzip compression
+- Health check endpoint
+- Load balancing support (commented out)
+
 The URL to query a position in an opening
 tree is the pattern `http://localhost:2882/{tree}/{fen}` where:
 
