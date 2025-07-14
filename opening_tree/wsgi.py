@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
 import os
-from typing import Dict, Any
+from typing import Dict, Any, List
 
 from opening_tree.service.api import OpeningTreeAPI, create_trees_from_config, load_config
 
@@ -38,7 +38,7 @@ def create_app(config_path: str = None) -> FastAPI:
     api = OpeningTreeAPI(trees)
     
     @app.get("/")
-    async def list_trees() -> Dict[str, Any]:
+    async def list_trees() -> List[Dict[str, Any]]:
         """List available opening trees."""
         return api.list_trees()
     
