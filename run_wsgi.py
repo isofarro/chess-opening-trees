@@ -67,13 +67,30 @@ def main():
     print(f"Starting Opening Tree API on {args.host}:{args.port}")
     print(f"Using config: {os.getenv('OPENING_TREE_CONFIG')}")
     
-    uvicorn.run(
-        "opening_tree.wsgi:app",
-        host=args.host,
-        port=args.port,
-        reload=args.reload
-    )
-
+    # Configure uvicorn for optimal performance
+    uvicorn_config = {
+        "app": "opening_tree.wsgi:app",
+        "host": args.host,
+        "port": args.port,
+        "reload": args.reload,
+        "access_log": False,  # Disable access logging for performance
+        "workers": 1,  # Single worker for SQLite (no shared state)
+    }
+    
+    # Add performance optimizations if available
+    try:
+        import uvloop
+        uvicorn_config["loop"] = "uvloop"  # Faster event loop
+    except ImportError:
+        pass
+    
+    try:
+        import httptools
+        uvicorn_config["http"] = "httptools"  # Faster HTTP parser
+    except ImportError:
+        pass
+    
+    uvicorn.run(**uvicorn_config)
 
 if __name__ == "__main__":
     main()

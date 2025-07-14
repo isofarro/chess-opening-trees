@@ -42,7 +42,7 @@ def create_app(config_path: str = None) -> FastAPI:
         """List available opening trees."""
         return api.list_trees()
     
-    @app.get("/{tree_name}/{encoded_fen}")
+    @app.get("/{tree_name}/{encoded_fen:path}")
     async def query_position(tree_name: str, encoded_fen: str) -> Dict[str, Any]:
         """Query a position in a specific opening tree.
         
