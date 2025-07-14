@@ -31,6 +31,10 @@ class PruningRepository:
             CREATE TABLE positions_to_delete (
                 position_id INTEGER PRIMARY KEY
             );
+
+            -- Pruning-specific index for efficient move traversal
+            -- This index is created temporarily during pruning operations
+            CREATE INDEX idx_moves_stats_join ON main_tree.moves(to_position_id, from_position_id);
         """)
 
     def count_positions(self) -> int:
@@ -198,6 +202,10 @@ class PruningRepository:
                 f"DELETE FROM positions_to_delete WHERE position_id IN ({placeholders})",
                 position_ids
             )
+
+    def cleanup_pruning_indexes(self):
+        """Drop temporary indexes created for pruning operations."""
+        self.conn.execute("DROP INDEX IF EXISTS main_tree.idx_moves_stats_join")
 
     def vacuum_database(self):
         """Vacuum the main database to reclaim space."""

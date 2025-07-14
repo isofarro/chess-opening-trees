@@ -51,6 +51,9 @@ class TreePruner:
             # Delete positions in batches
             total_deleted = self._execute_batch_deletion(repository, batch_size, progress_callback)
 
+            # Clean up temporary pruning indexes
+            repository.cleanup_pruning_indexes()
+
             # Vacuum the database to reclaim space
             repository.vacuum_database()
 

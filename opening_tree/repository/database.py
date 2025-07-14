@@ -49,6 +49,12 @@ class OpeningTreeRepository:
                 import_date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 UNIQUE(filename, file_hash)
             );
+
+            -- Performance indexes for large databases
+            CREATE INDEX IF NOT EXISTS idx_moves_from_position ON moves(from_position_id);
+
+            -- Analyze tables for query optimization
+            ANALYZE;
         """)
 
     def add_position(self, fen: str) -> int:
@@ -193,14 +199,13 @@ class OpeningTreeRepository:
         """Get a position by its FEN string.
 
         Args:
-            fen: The FEN string to look up. Can be full or normalized FEN.
+            fen: The normalized FEN string to look up (first 4 segments only).
 
         Returns:
             Position data if found, None otherwise.
         """
         cursor = self.conn.execute(
-            "SELECT id, fen FROM positions WHERE fen LIKE ?",
-            (f"{fen}%",)  # Use LIKE to match both full and normalized FENs
+            "SELECT id, fen FROM positions WHERE fen = ?", (fen,)
         )
         row = cursor.fetchone()
         if row:
