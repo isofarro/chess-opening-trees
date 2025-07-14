@@ -5,7 +5,31 @@ class OpeningTreeRepository:
     def __init__(self, tree_path: str):
         self.tree_path = tree_path
         self.conn = sqlite3.connect(tree_path)
+        self._configure_sqlite_performance()
         self._init_database()
+    
+    def _configure_sqlite_performance(self) -> None:
+        """Configure SQLite for optimal performance."""
+        # Enable WAL mode for better concurrency
+        self.conn.execute("PRAGMA journal_mode=WAL")
+        
+        # Increase cache size (default is 2MB, set to 64MB)
+        self.conn.execute("PRAGMA cache_size=-65536")
+        
+        # Use memory for temporary tables
+        self.conn.execute("PRAGMA temp_store=MEMORY")
+        
+        # Optimize synchronization for better performance
+        self.conn.execute("PRAGMA synchronous=NORMAL")
+        
+        # Set busy timeout to handle concurrent access
+        self.conn.execute("PRAGMA busy_timeout=30000")
+        
+        # Enable query planner optimizations
+        self.conn.execute("PRAGMA optimize")
+        
+        # Commit the PRAGMA settings
+        self.conn.commit()
 
     def _init_database(self) -> None:
         """Initialize the database with required tables."""
