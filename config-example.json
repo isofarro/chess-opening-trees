@@ -3,11 +3,11 @@
   "trees": [
     {
       "name": "main",
-      "path": "twic-2025.tree"
+      "file": "twic-2025.tree"
     },
     {
       "name": "bdg",
-      "path": "pgn/openings/D00-bdg-games-cce-2025-05.tree"
+      "file": "pgn/openings/D00-bdg-games-cce-2025-05.tree"
     }
   ]
 }

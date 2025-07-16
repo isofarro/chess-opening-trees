@@ -18,7 +18,7 @@ class OpeningTreeAPI:
         """Get list of available trees."""
         tree_list = [{
             'name': name,
-            'path': f'{self.base_url}/{name}/{{fen}}' if self.base_url else f'/{name}/{{fen}}'
+            'path': f'{self.base_url}/{name}/' if self.base_url else f'/{name}/'
         } for name in self.trees.keys()]
         return tree_list
     
@@ -59,10 +59,10 @@ def get_trees_from_config(config: Dict) -> List[Tuple[str, str]]:
     trees = []
     if 'trees' in config:
         for tree_config in config['trees']:
-            if isinstance(tree_config, dict) and 'name' in tree_config and 'path' in tree_config:
-                trees.append((tree_config['name'], tree_config['path']))
+            if isinstance(tree_config, dict) and 'name' in tree_config and 'file' in tree_config:
+                trees.append((tree_config['name'], tree_config['file']))
             else:
-                raise ValueError(f"Invalid tree configuration: {tree_config}. Expected dict with 'name' and 'path' keys.")
+                raise ValueError(f"Invalid tree configuration: {tree_config}. Expected dict with 'name' and 'file' keys.")
     return trees
 
 
