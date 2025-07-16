@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 import os
 from typing import Dict, Any, List
@@ -38,9 +38,14 @@ def create_app(config_path: str = None) -> FastAPI:
     api = OpeningTreeAPI(trees)
     
     @app.get("/")
-    async def list_trees() -> List[Dict[str, Any]]:
+    async def list_trees(request: Request) -> List[Dict[str, Any]]:
         """List available opening trees."""
-        return api.list_trees()
+        # Construct base URL from request
+        base_url = f"{request.url.scheme}://{request.url.netloc}"
+        
+        # Create a temporary API instance with the correct base URL
+        api_with_base_url = OpeningTreeAPI(api.trees, base_url)
+        return api_with_base_url.list_trees()
     
     @app.get("/{tree_name}/{encoded_fen:path}")
     async def query_position(tree_name: str, encoded_fen: str) -> Dict[str, Any]:
