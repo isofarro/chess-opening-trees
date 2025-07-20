@@ -221,6 +221,31 @@ class OpeningTreeService:
 
         return '-'.join(valid_parts)
 
+    def _remove_en_passant_from_fen(self, fen: str) -> str:
+        """Remove en-passant information from a FEN string."""
+        fen_parts = fen.split()
+        if len(fen_parts) >= 4:
+            fen_parts[3] = '-'  # Set en-passant to none
+        return ' '.join(fen_parts[:4])
+
+    def _merge_moves(self, moves1: List[Dict[str, Any]], moves2: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Merge two lists of moves, aggregating statistics for matching moves."""
+        move_dict = {}
+        
+        # Process first set of moves
+        for move in moves1:
+            key = move['move']
+            move_dict[key] = move.copy()
+        
+        # Process second set of moves, add moves that haven't occurred in the first set
+        for move in moves2:
+            key = move['move']
+            if key not in move_dict:
+                # Add new move
+                move_dict[key] = move.copy()
+        
+        return list(move_dict.values())
+
     def query_position(self, fen: str) -> Dict[str, Any]:
         """Query a position and its possible moves with statistics.
 
@@ -236,8 +261,24 @@ class OpeningTreeService:
         if not position:
             return None
 
-        # Get raw moves data
+        # Get raw moves data for the original position
         moves = self.repository.get_moves_from_position(position['id'])
+        
+        # Check if the original FEN has en-passant available
+        fen_parts = normalized_fen.split()
+        has_en_passant = len(fen_parts) >= 4 and fen_parts[3] != '-'
+        
+        if has_en_passant:
+            # Query the same position without en-passant
+            no_ep_fen = self._remove_en_passant_from_fen(normalized_fen)
+            no_ep_position = self.repository.get_position_by_fen(no_ep_fen)
+            
+            if no_ep_position:
+                # Get moves from the non-en-passant position
+                no_ep_moves = self.repository.get_moves_from_position(no_ep_position['id'])
+                
+                # Merge the two sets of moves
+                moves = self._merge_moves(moves, no_ep_moves)
 
         # Transform the moves data
         for move in moves:
@@ -248,6 +289,9 @@ class OpeningTreeService:
             # Remove raw data fields used for calculations
             del move['total_player_elo']
             del move['total_player_performance']
+
+        # Sort by total games descending
+        moves.sort(key=lambda x: x['total_games'], reverse=True)
 
         return {
             "fen": position['fen'],
