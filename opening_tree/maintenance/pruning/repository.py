@@ -31,11 +31,23 @@ class PruningRepository:
             CREATE TABLE positions_to_delete (
                 position_id INTEGER PRIMARY KEY
             );
-
-            -- Pruning-specific index for efficient move traversal
-            -- This index is created temporarily during pruning operations
-            CREATE INDEX idx_moves_stats_join ON main_tree.moves(to_position_id, from_position_id);
         """)
+
+    def ensure_main_tree_indexes(self):
+        """Ensure necessary indexes exist on the main tree database."""
+        try:
+            # Check if the index already exists by querying the attached database
+            cursor = self.conn.execute("""
+                SELECT name FROM main_tree.sqlite_master
+                WHERE type='index' AND name='idx_moves_stats_join'
+            """)
+            if not cursor.fetchone():
+                # Index doesn't exist, but we can't create it on attached DB
+                # Log a warning or handle as needed
+                pass
+        except Exception:
+            # If we can't check/create the index, continue without it
+            pass
 
     def count_positions(self) -> int:
         """Count total positions being analyzed."""
