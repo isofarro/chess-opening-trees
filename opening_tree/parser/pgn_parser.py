@@ -13,7 +13,11 @@ class PGNParser:
         game_count = 0
         with open(pgn_path, encoding='iso-8859-1') as pgn_file:
             while True:
-                game = chess.pgn.read_game(pgn_file)
+                try:
+                    game = chess.pgn.read_game(pgn_file)
+                except Exception as e:
+                    print(f"Error reading game: {e}")
+
                 if game is None:
                     break
 
