@@ -3,6 +3,7 @@ from opening_tree.commands.build import build_tree
 from opening_tree.commands.prune import prune_tree
 from opening_tree.commands.query import query_tree
 from opening_tree.commands.serve import serve_tree
+from opening_tree.commands.normalise_fens import normalise_fens
 
 def main():
     parser = argparse.ArgumentParser(
@@ -65,6 +66,26 @@ def main():
         help="Number of positions to process in each batch (default: 5000)"
     )
 
+    # Fix FENs command
+    fix_parser = subparsers.add_parser(
+        "fix-fens",
+        help="Normalise FENs in the tree and merge duplicates"
+    )
+    fix_parser.add_argument(
+        "tree",
+        help="The tree file to fix"
+    )
+    fix_parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Do not write changes; show summary of planned updates/merges"
+    )
+    fix_parser.add_argument(
+        "--show-details",
+        action="store_true",
+        help="In dry-run, print per-position actions"
+    )
+
     # Query command
     query_parser = subparsers.add_parser(
         "query",
@@ -119,6 +140,8 @@ def main():
         query_tree(args)
     elif args.command == "serve":
         serve_tree(args)
+    elif args.command == "fix-fens":
+        normalise_fens(args)
     elif not args.command:
         parser.print_help()
 
