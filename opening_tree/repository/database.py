@@ -2,11 +2,15 @@ from typing import Dict, Any, List
 import sqlite3
 
 class OpeningTreeRepository:
-    def __init__(self, tree_path: str):
+    def __init__(self, tree_path: str, read_only: bool = False):
         self.tree_path = tree_path
-        self.conn = sqlite3.connect(tree_path)
-        self._configure_sqlite_performance()
-        self._init_database()
+        if read_only:
+            self.conn = sqlite3.connect(f"file:{tree_path}?mode=ro", uri=True)
+            self.conn.execute("PRAGMA query_only=1")
+        else:
+            self.conn = sqlite3.connect(tree_path)
+            self._configure_sqlite_performance()
+            self._init_database()
     
     def _configure_sqlite_performance(self) -> None:
         """Configure SQLite for optimal performance."""

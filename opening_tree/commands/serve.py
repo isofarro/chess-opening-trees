@@ -88,7 +88,7 @@ def serve_tree(args) -> None:
         from opening_tree.service.opening_tree import OpeningTreeService
         trees = {}
         for name, tree_path in trees_list:
-            repository = OpeningTreeRepository(tree_path)
+            repository = OpeningTreeRepository(tree_path, read_only=True)
             trees[name] = OpeningTreeService(repository)
 
     # Create API instance with base URL

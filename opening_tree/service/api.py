@@ -92,7 +92,7 @@ def create_trees_from_config(config_path: str, trees_list: Optional[List[Tuple[s
             config_dir = Path(config_path).parent
             tree_path = str(config_dir / tree_path)
         
-        repository = OpeningTreeRepository(tree_path)
+        repository = OpeningTreeRepository(tree_path, read_only=True)
         trees[name] = OpeningTreeService(repository)
     
     return trees
