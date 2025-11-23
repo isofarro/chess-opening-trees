@@ -4,31 +4,37 @@ import type { Database as BetterDatabase } from "better-sqlite3";
 import type { MoveRow, PositionRow } from "../types";
 
 export class OpeningTreeRepository {
-	private db: BetterDatabase;
+  private db: BetterDatabase;
 
-	constructor(treeFilePath: string) {
-		const absolutePath = path.isAbsolute(treeFilePath)
-			? treeFilePath
-			: path.resolve(treeFilePath);
+  constructor(treeFilePath: string) {
+    const absolutePath = path.isAbsolute(treeFilePath)
+      ? treeFilePath
+      : path.resolve(treeFilePath);
     const uri = `file:${absolutePath}?immutable=1&mode=ro`;
     let db: BetterDatabase;
     try {
-      db = new Database(uri, { readonly: true, fileMustExist: true }) as unknown as BetterDatabase;
+      db = new Database(uri, {
+        readonly: true,
+        fileMustExist: true,
+      }) as unknown as BetterDatabase;
     } catch {
-      db = new Database(absolutePath, { readonly: true, fileMustExist: true }) as unknown as BetterDatabase;
+      db = new Database(absolutePath, {
+        readonly: true,
+        fileMustExist: true,
+      }) as unknown as BetterDatabase;
     }
     this.db = db;
-		this.db.pragma("query_only=ON");
-	}
+    this.db.pragma("query_only=ON");
+  }
 
-	getPositionByFen(fen: string): PositionRow | null {
-		const stmt = this.db.prepare("SELECT id, fen FROM positions WHERE fen = ?");
-		const row = stmt.get(fen) as PositionRow | undefined;
-		return row ?? null;
-	}
+  getPositionByFen(fen: string): PositionRow | null {
+    const stmt = this.db.prepare("SELECT id, fen FROM positions WHERE fen = ?");
+    const row = stmt.get(fen) as PositionRow | undefined;
+    return row ?? null;
+  }
 
-	getMovesFromPosition(positionId: number): MoveRow[] {
-		const sql = `
+  getMovesFromPosition(positionId: number): MoveRow[] {
+    const sql = `
       SELECT
         m.move,
         p.fen,
@@ -46,7 +52,7 @@ export class OpeningTreeRepository {
       WHERE m.from_position_id = ?
       ORDER BY s.total_games DESC
     `;
-		const stmt = this.db.prepare(sql);
-		return stmt.all(positionId) as MoveRow[];
-	}
+    const stmt = this.db.prepare(sql);
+    return stmt.all(positionId) as MoveRow[];
+  }
 }
