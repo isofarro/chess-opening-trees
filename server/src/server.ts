@@ -1,13 +1,13 @@
 import Fastify from "fastify";
 import { loadConfigFromEnv, resolveTreePath } from "./config";
 import { OpeningTreeRepository } from "./repository/openingTreeRepository";
-import { OpeningTreeService } from "./services/openingTreeService";
 import { registerRoutes } from "./router";
+import { OpeningTreeService } from "./services/openingTreeService";
 
 async function main() {
   const app = Fastify({ logger: true });
 
-  const { trees, baseDir } = loadConfigFromEnv();
+  const { trees, baseDir, baseUrl } = loadConfigFromEnv();
   const services: Record<string, OpeningTreeService> = {};
   for (const { name, file } of trees) {
     const resolved = resolveTreePath(baseDir, file);
@@ -15,7 +15,7 @@ async function main() {
     services[name] = new OpeningTreeService(repo);
   }
 
-  registerRoutes(app, services);
+  registerRoutes(app, services, baseUrl);
 
   const port = Number(process.env.PORT || 8000);
   const host = process.env.HOST || "0.0.0.0";

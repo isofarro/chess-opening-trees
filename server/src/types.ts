@@ -3,6 +3,11 @@ export interface TreeConfigItem {
   file: string;
 }
 
+export interface ServerConfig {
+  trees: TreeConfigItem[];
+  baseUrl?: string;
+}
+
 export interface PositionRow {
   id: number;
   fen: string;

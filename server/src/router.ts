@@ -1,12 +1,18 @@
 import type { FastifyInstance } from "fastify";
-import { OpeningTreeService } from "./services/openingTreeService";
+import type { OpeningTreeService } from "./services/openingTreeService";
 
 export function registerRoutes(
   app: FastifyInstance,
   services: Record<string, OpeningTreeService>,
+  baseUrl?: string,
 ) {
-  app.get("/", async () => {
-    return Object.keys(services).map((name) => ({ name, path: `/${name}/` }));
+  app.get("/", async (request) => {
+    const inferredBase = `${request.protocol}://${request.headers.host}`;
+    const prefix = baseUrl ?? inferredBase;
+    return Object.keys(services).map((name) => ({
+      name,
+      path: `${prefix}/${name}/`,
+    }));
   });
 
   app.get<{ Params: { treeName: string } }>(
