@@ -116,15 +116,31 @@ The configuration file is in JSON format:
   "trees": [
     {
       "name": "main",
-      "path": "twic-2025.tree"
+      "file": "trees/twic-2025.tree"
     },
     {
       "name": "bdg",
-      "path": "pgn/openings/D00-bdg-games-cce-2025-05.tree"
+      "file": "pgn/openings/D00-bdg-games-cce-2025-05.tree"
     }
   ]
 }
 ```
+
+#### Reverse proxy base URL
+
+When running behind a proxy (e.g., Nginx), set `baseUrl` in the config. Returned links in the API responses use this public base URL instead of `http://localhost:{port}`.
+
+```json
+{
+  "baseUrl": "https://openingtrees.example.com/api",
+  "port": 2882,
+  "trees": [
+    { "name": "main", "file": "trees/twic-2025.tree" }
+  ]
+}
+```
+
+The server still binds locally to `localhost:2882`; the `baseUrl` only affects the URLs returned by the API (e.g., tree paths).
 
 Both methods start an HTTP server. The server supports multiple trees, each specified by name and tree file path. Command line arguments take precedence over config file settings.
 
@@ -208,11 +224,13 @@ the payload:
 [
   {
     "name": "main",
-    "path": "http://localhost:2882/main/{fen}"
+    "path": "http://localhost:2882/main/"
   },
   {
     "name": "bdg-cce",
-    "path": "http://localhost:2882/bdg-cce/{fen}"
+    "path": "http://localhost:2882/bdg-cce/"
   }
 ]
 ```
+
+Append the URL-encoded FEN to the tree path to query a position, e.g. `http://localhost:2882/main/<encoded_fen>`.
