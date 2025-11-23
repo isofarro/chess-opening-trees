@@ -92,9 +92,10 @@ def serve_tree(args) -> None:
             trees[name] = OpeningTreeService(repository)
 
     # Create API instance with base URL
-    protocol = 'http'  # Could be made configurable via args if needed
-    domain = 'localhost'  # Could be made configurable via args if needed
-    base_url = f"{protocol}://{domain}:{port}"
+    protocol = 'http'
+    domain = 'localhost'
+    base_url_override = str(config.get('baseUrl', '')).strip() if config else ''
+    base_url = base_url_override.rstrip('/') if base_url_override else f"{protocol}://{domain}:{port}"
     api = OpeningTreeAPI(trees, base_url)
     
     # Create and start the server
@@ -108,8 +109,12 @@ def serve_tree(args) -> None:
     for name in trees.keys():
         print(f"  - {name}")
     print("\nEndpoints:")
-    print(f"  GET {protocol}://{domain}:{port}/          # List available trees")
-    print(f"  GET {protocol}://{domain}:{port}/tree_name/encoded_fen  # Query position")
+    if base_url_override:
+        print(f"  GET {base_url}/          # List available trees")
+        print(f"  GET {base_url}/tree_name/encoded_fen  # Query position")
+    else:
+        print(f"  GET {protocol}://{domain}:{port}/          # List available trees")
+        print(f"  GET {protocol}://{domain}:{port}/tree_name/encoded_fen  # Query position")
 
     try:
         server.serve_forever()
