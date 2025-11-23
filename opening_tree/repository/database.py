@@ -5,7 +5,7 @@ class OpeningTreeRepository:
     def __init__(self, tree_path: str, read_only: bool = False):
         self.tree_path = tree_path
         if read_only:
-            self.conn = sqlite3.connect(f"file:{tree_path}?mode=ro", uri=True)
+            self.conn = sqlite3.connect(f"file:{tree_path}?mode=ro&immutable=1", uri=True)
             self.conn.execute("PRAGMA query_only=1")
         else:
             self.conn = sqlite3.connect(tree_path)
